@@ -22,6 +22,7 @@ enum TokenType {
   REFRESH
   PASSWORD_RESET
   EMAIL_VERIFICATION
+  ADMIN_INVITE
 }
 
 enum SecurityEventType {
@@ -36,6 +37,10 @@ enum SecurityEventType {
   PASSWORD_CHANGED
   RATE_LIMIT_EXCEEDED
   UNAUTHORIZED_ACCESS
+  ADMIN_INVITE_SENT
+  ADMIN_INVITE_ACCEPTED
+  ADMIN_INVITE_EXPIRED
+  ADMIN_PASSWORD_SETUP
 }
 
 enum SecuritySeverity {
@@ -50,7 +55,7 @@ enum SecuritySeverity {
 model User {
   id        String   @id @default(uuid())
   email     String   @unique
-  password  String
+  password  String?
   firstName String   @map("first_name")
   lastName  String   @map("last_name")
   role      Role     @default(STUDENT)
@@ -155,4 +160,22 @@ model BlockedIp {
   @@index([active])
   @@index([expiresAt])
   @@map("blocked_ips")
+}
+
+// ─── Admin Invite Model ──────────────────────────────────
+
+model AdminInvite {
+  id          String   @id @default(uuid())
+  email       String
+  token       String   @unique
+  expiresAt   DateTime @map("expires_at")
+  used        Boolean  @default(false)
+  usedAt      DateTime? @map("used_at")
+  createdAt   DateTime @default(now()) @map("created_at")
+  createdBy   String?  @map("created_by")
+
+  @@index([email])
+  @@index([token])
+  @@index([expiresAt])
+  @@map("admin_invites")
 }

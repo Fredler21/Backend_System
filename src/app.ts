@@ -14,6 +14,7 @@ import { globalRateLimiter, ipBlockGuard, requestMonitor } from './modules/secur
 import authRoutes from './modules/auth/auth.routes';
 import userRoutes from './modules/users/users.routes';
 import securityRoutes from './modules/security/security.routes';
+import adminRoutes from './modules/admin/admin.routes';
 
 const app = express();
 
@@ -67,6 +68,7 @@ app.get('/', (_req, res) => {
       auth: '/api/auth',
       users: '/api/users',
       security: '/api/security',
+      admin: '/api/admin',
     },
   });
 });
@@ -76,6 +78,7 @@ app.get('/', (_req, res) => {
 app.use(`${API_PREFIX}/auth`, authRoutes);
 app.use(`${API_PREFIX}/users`, userRoutes);
 app.use(`${API_PREFIX}/security`, securityRoutes);
+app.use(`${API_PREFIX}/admin`, adminRoutes);
 
 // ─── 404 Handler ────────────────────────────────────────
 

@@ -32,7 +32,7 @@ function toUserResponse(user: {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
-  password?: string;
+  password?: string | null;
 }): UserResponse {
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { password, ...safeUser } = user;
@@ -184,6 +184,19 @@ export async function login(input: LoginInput, ipAddress: string, userAgent?: st
       userId: user.id,
     });
     throw new UnauthorizedError('Account has been deactivated');
+  }
+
+  // Reject accounts that haven't completed password setup (invite pending)
+  if (!user.password) {
+    await recordLoginAttempt({
+      email: input.email,
+      ipAddress,
+      userAgent,
+      success: false,
+      failureReason: 'Password not set',
+      userId: user.id,
+    });
+    throw new UnauthorizedError('Account setup is not complete. Please use your invitation link to set a password.');
   }
 
   const isPasswordValid = await bcrypt.compare(input.password, user.password);

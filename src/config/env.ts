@@ -27,6 +27,11 @@ const envSchema = z.object({
   RATE_LIMIT_WINDOW_MINUTES: z.coerce.number().min(1).default(15),
   RATE_LIMIT_MAX_REQUESTS: z.coerce.number().min(10).default(100),
   AUTH_RATE_LIMIT_MAX_REQUESTS: z.coerce.number().min(3).default(10),
+
+  // Admin Invite
+  ADMIN_INVITE_EXPIRY_HOURS: z.coerce.number().min(1).default(24),
+  ADMIN_ALLOWED_EMAILS: z.string().default('admin@edlight.org,info@edlight.org'),
+  ADMIN_PANEL_URL: z.string().default('http://localhost:3001'),
 });
 
 const parsed = envSchema.safeParse(process.env);

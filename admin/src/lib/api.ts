@@ -238,4 +238,40 @@ export const securityApi = {
     request<ApiResponse>(`/security/unlock-account/${userId}`, { method: 'POST' }),
 };
 
+// ─── Admin Invite API ──────────────────────────────────
+
+export const adminApi = {
+  verifyToken: (token: string) =>
+    request<ApiResponse<{ email: string; expiresAt: string; createdAt: string }>>(
+      `/admin/verify-token?token=${encodeURIComponent(token)}`,
+    ),
+
+  setupPassword: (data: { token: string; password: string; confirmPassword: string }) =>
+    request<ApiResponse<{ email: string }>>('/admin/setup-password', {
+      method: 'POST',
+      body: JSON.stringify(data),
+    }),
+
+  invite: (email: string) =>
+    request<ApiResponse<{ inviteUrl: string; token: string; expiresAt: string }>>('/admin/invite', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    }),
+
+  listInvites: () =>
+    request<ApiResponse<Array<{
+      id: string;
+      email: string;
+      used: boolean;
+      expired: boolean;
+      expiresAt: string;
+      usedAt: string | null;
+      createdAt: string;
+      createdBy: string | null;
+    }>>>('/admin/invites'),
+
+  allowedEmails: () =>
+    request<ApiResponse<{ emails: string[] }>>('/admin/allowed-emails'),
+};
+
 export { ApiError };
