@@ -1,0 +1,9 @@
+node_modules
+dist
+.env
+.env.local
+
+# Next.js admin app
+admin/.next
+admin/node_modules
+admin/.env.local
