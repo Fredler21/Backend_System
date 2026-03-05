@@ -77,7 +77,6 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@edlight.org"
                 required
                 className="w-full px-4 py-2.5 rounded-lg border text-sm transition-colors focus:border-[var(--color-primary)]"
                 style={{
@@ -97,7 +96,6 @@ export default function LoginPage() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
                   required
                   className="w-full px-4 py-2.5 rounded-lg border text-sm pr-11 transition-colors focus:border-[var(--color-primary)]"
                   style={{
