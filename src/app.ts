@@ -19,6 +19,9 @@ import adminManagementRoutes from './modules/admin/admin-management.routes';
 
 const app = express();
 
+// ─── Trust Proxy (required for Vercel / reverse proxies) ────
+app.set('trust proxy', true);
+
 // ─── Global Middleware ──────────────────────────────────
 
 app.use(helmet());

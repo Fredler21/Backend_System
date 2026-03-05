@@ -7,6 +7,17 @@ import { logSecurityEvent } from '../security/security.service';
 const isTest = process.env.NODE_ENV === 'test';
 
 /**
+ * Extract real client IP from proxy headers (Vercel, Cloudflare, etc.)
+ */
+function getClientIp(req: Request): string {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (typeof forwarded === 'string') {
+    return forwarded.split(',')[0].trim();
+  }
+  return req.ip || req.socket.remoteAddress || 'unknown';
+}
+
+/**
  * Pass-through middleware used in test environment to disable rate limiting.
  */
 const passThrough = (_req: Request, _res: Response, next: NextFunction): void => {
@@ -25,6 +36,7 @@ export const globalRateLimiter = isTest
       standardHeaders: true,
       legacyHeaders: false,
       validate: { xForwardedForHeader: false },
+      keyGenerator: getClientIp,
       handler: async (req, res) => {
         const ip = req.ip || req.socket.remoteAddress || 'unknown';
 
@@ -53,6 +65,7 @@ export const authRateLimiter = isTest
       standardHeaders: true,
       legacyHeaders: false,
       validate: { xForwardedForHeader: false },
+      keyGenerator: getClientIp,
       handler: async (req, res) => {
         const ip = req.ip || req.socket.remoteAddress || 'unknown';
 

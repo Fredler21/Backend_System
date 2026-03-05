@@ -6,9 +6,6 @@ import { authRateLimiter } from '../security/rateLimiter';
 
 const router = Router();
 
-// Apply auth-specific rate limiting to all auth routes
-router.use(authRateLimiter);
-
 /**
  * @openapi
  * /auth/register:
@@ -41,7 +38,7 @@ router.use(authRateLimiter);
  *       422:
  *         description: Validation error
  */
-router.post('/register', validate(registerSchema), authController.register);
+router.post('/register', authRateLimiter, validate(registerSchema), authController.register);
 
 /**
  * @openapi
@@ -68,7 +65,7 @@ router.post('/register', validate(registerSchema), authController.register);
  *       401:
  *         description: Invalid credentials
  */
-router.post('/login', validate(loginSchema), authController.login);
+router.post('/login', authRateLimiter, validate(loginSchema), authController.login);
 
 /**
  * @openapi
