@@ -44,7 +44,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifications, setNotifications] = useState<SecurityEvent[]>([]);
-  const [notifLoading, setNotifLoading] = useState(false);
+  const [notifLoading, setNotifLoading] = useState(true);
 
   useEffect(() => {
     if (!loading && !user) router.replace('/login');
@@ -56,22 +56,27 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   useEffect(() => {
     if (!user) return;
     const fetchNotifs = async () => {
+      setNotifLoading(true);
       try {
-        const res = await securityApi.events({ limit: 10, resolved: 'false' });
+        const res = await securityApi.events({ limit: 20, resolved: 'false' });
         if (res.success && res.data) setNotifications(res.data);
-      } catch { /* ignore */ }
+      } catch {
+        setNotifications([]);
+      } finally {
+        setNotifLoading(false);
+      }
     };
     fetchNotifs();
     const interval = setInterval(fetchNotifs, 60000);
     return () => clearInterval(interval);
   }, [user]);
 
-  // Close dropdowns on click outside
+  // Close profile dropdown on click outside
   useEffect(() => {
-    const handler = () => { setProfileOpen(false); setNotifOpen(false); };
-    if (profileOpen || notifOpen) document.addEventListener('click', handler);
+    const handler = () => setProfileOpen(false);
+    if (profileOpen) document.addEventListener('click', handler);
     return () => document.removeEventListener('click', handler);
-  }, [profileOpen, notifOpen]);
+  }, [profileOpen]);
 
   if (loading) {
     return (
@@ -256,100 +261,23 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             </button>
 
             {/* Notifications */}
-            <div className="relative">
-              <button
-                onClick={(e) => { e.stopPropagation(); setNotifOpen(!notifOpen); setProfileOpen(false); }}
-                className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors relative"
-                style={{ color: 'var(--color-text-muted)' }}
-                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-surface-hover)'; }}
-                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-              >
-                <Bell className="w-[18px] h-[18px]" />
-                {notifications.length > 0 && (
-                  <span
-                    className="absolute top-1 right-1 min-w-[16px] h-4 flex items-center justify-center rounded-full text-[10px] font-bold text-white px-1"
-                    style={{ background: 'var(--color-danger)' }}
-                  >
-                    {notifications.length > 9 ? '9+' : notifications.length}
-                  </span>
-                )}
-              </button>
-
-              {notifOpen && (
-                <div
-                  className="absolute right-0 top-full mt-2 w-80 rounded-xl border py-0 z-50 overflow-hidden"
-                  style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', boxShadow: 'var(--shadow-lg)' }}
-                  onClick={(e) => e.stopPropagation()}
+            <button
+              onClick={() => { setNotifOpen(true); setProfileOpen(false); }}
+              className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors relative"
+              style={{ color: 'var(--color-text-muted)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-surface-hover)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+            >
+              <Bell className="w-[18px] h-[18px]" />
+              {notifications.length > 0 && (
+                <span
+                  className="absolute top-1 right-1 min-w-[16px] h-4 flex items-center justify-center rounded-full text-[10px] font-bold text-white px-1"
+                  style={{ background: 'var(--color-danger)' }}
                 >
-                  <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid var(--color-border)' }}>
-                    <span className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Notifications</span>
-                    {notifications.length > 0 && (
-                      <span className="text-[11px] font-medium px-2 py-0.5 rounded-full"
-                        style={{ background: 'var(--color-danger-light)', color: 'var(--color-danger)' }}>
-                        {notifications.length} unresolved
-                      </span>
-                    )}
-                  </div>
-
-                  <div className="max-h-80 overflow-y-auto">
-                    {notifications.length === 0 ? (
-                      <div className="py-10 text-center">
-                        <Bell className="w-8 h-8 mx-auto mb-2" style={{ color: 'var(--color-text-muted)', opacity: 0.4 }} />
-                        <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>No notifications</p>
-                      </div>
-                    ) : (
-                      notifications.map((evt) => {
-                        const severityColor = evt.severity === 'CRITICAL' ? 'var(--color-danger)'
-                          : evt.severity === 'HIGH' ? 'var(--color-warning)'
-                          : evt.severity === 'MEDIUM' ? 'var(--color-accent)'
-                          : 'var(--color-text-muted)';
-                        return (
-                          <div
-                            key={evt.id}
-                            className="px-4 py-3 transition-colors cursor-pointer"
-                            style={{ borderBottom: '1px solid var(--color-border)' }}
-                            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-surface-hover)'; }}
-                            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-                            onClick={() => { setNotifOpen(false); router.push('/security'); }}
-                          >
-                            <div className="flex items-start gap-3">
-                              <div className="w-2 h-2 rounded-full mt-1.5 shrink-0" style={{ background: severityColor }} />
-                              <div className="min-w-0 flex-1">
-                                <p className="text-[13px] font-medium truncate" style={{ color: 'var(--color-text)' }}>
-                                  {evt.type.replace(/_/g, ' ')}
-                                </p>
-                                <p className="text-[12px] mt-0.5 line-clamp-2" style={{ color: 'var(--color-text-muted)' }}>
-                                  {evt.message}
-                                </p>
-                                <p className="text-[11px] mt-1" style={{ color: 'var(--color-text-muted)', opacity: 0.6 }}>
-                                  {new Date(evt.createdAt).toLocaleString()}
-                                </p>
-                              </div>
-                              <span className="text-[10px] font-semibold shrink-0 px-1.5 py-0.5 rounded"
-                                style={{ background: `color-mix(in srgb, ${severityColor} 15%, transparent)`, color: severityColor }}>
-                                {evt.severity}
-                              </span>
-                            </div>
-                          </div>
-                        );
-                      })
-                    )}
-                  </div>
-
-                  {notifications.length > 0 && (
-                    <div className="px-4 py-2.5 text-center" style={{ borderTop: '1px solid var(--color-border)' }}>
-                      <button
-                        onClick={() => { setNotifOpen(false); router.push('/security'); }}
-                        className="text-[13px] font-medium transition-colors"
-                        style={{ color: 'var(--color-primary)' }}
-                      >
-                        View all in Security
-                      </button>
-                    </div>
-                  )}
-                </div>
+                  {notifications.length > 9 ? '9+' : notifications.length}
+                </span>
               )}
-            </div>
+            </button>
 
             {/* Divider */}
             <div className="w-px h-8 mx-2" style={{ background: 'var(--color-border)' }} />
@@ -416,11 +344,128 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </header>
 
         {/* Main content */}
-        <main className="flex-1 overflow-y-auto p-8">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-8">
           <div className="max-w-[1400px] mx-auto">
             {children}
           </div>
         </main>
+      </div>
+
+      {/* ─── Notification Slide-Over Panel ───────────────── */}
+      {notifOpen && (
+        <div className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm" onClick={() => setNotifOpen(false)} />
+      )}
+      <div
+        className="fixed top-0 right-0 h-full z-[70] w-full sm:w-[380px] flex flex-col transition-transform duration-300 ease-in-out"
+        style={{
+          background: 'var(--color-surface)',
+          borderLeft: '1px solid var(--color-border)',
+          boxShadow: notifOpen ? '-4px 0 24px rgba(0,0,0,0.15)' : 'none',
+          transform: notifOpen ? 'translateX(0)' : 'translateX(100%)',
+        }}
+      >
+        {/* Panel Header */}
+        <div className="h-16 flex items-center justify-between px-5 shrink-0" style={{ borderBottom: '1px solid var(--color-border)' }}>
+          <div className="flex items-center gap-2">
+            <Bell className="w-5 h-5" style={{ color: 'var(--color-primary)' }} />
+            <span className="text-[15px] font-semibold" style={{ color: 'var(--color-text)' }}>Notifications</span>
+            {notifications.length > 0 && (
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full"
+                style={{ background: 'var(--color-danger-light)', color: 'var(--color-danger)' }}>
+                {notifications.length}
+              </span>
+            )}
+          </div>
+          <button
+            onClick={() => setNotifOpen(false)}
+            className="w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+            style={{ color: 'var(--color-text-muted)' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-surface-hover)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+
+        {/* Panel Body */}
+        <div className="flex-1 overflow-y-auto">
+          {notifLoading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="w-6 h-6 animate-spin" style={{ color: 'var(--color-primary)' }} />
+            </div>
+          ) : notifications.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-20 px-6">
+              <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
+                style={{ background: 'var(--color-surface-hover)' }}>
+                <Bell className="w-7 h-7" style={{ color: 'var(--color-text-muted)', opacity: 0.5 }} />
+              </div>
+              <p className="text-sm font-medium" style={{ color: 'var(--color-text-secondary)' }}>All clear!</p>
+              <p className="text-xs mt-1 text-center" style={{ color: 'var(--color-text-muted)' }}>
+                No unresolved security events
+              </p>
+            </div>
+          ) : (
+            <div>
+              {notifications.map((evt) => {
+                const severityColor = evt.severity === 'CRITICAL' ? 'var(--color-danger)'
+                  : evt.severity === 'HIGH' ? 'var(--color-warning)'
+                  : evt.severity === 'MEDIUM' ? 'var(--color-accent)'
+                  : 'var(--color-text-muted)';
+                return (
+                  <div
+                    key={evt.id}
+                    className="px-5 py-4 transition-colors cursor-pointer"
+                    style={{ borderBottom: '1px solid var(--color-border)' }}
+                    onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-surface-hover)'; }}
+                    onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                    onClick={() => { setNotifOpen(false); router.push('/security'); }}
+                  >
+                    <div className="flex items-start gap-3">
+                      <div className="w-2.5 h-2.5 rounded-full mt-1 shrink-0" style={{ background: severityColor }} />
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-[13px] font-semibold truncate" style={{ color: 'var(--color-text)' }}>
+                            {evt.type.replace(/_/g, ' ')}
+                          </p>
+                          <span className="text-[10px] font-bold shrink-0 px-1.5 py-0.5 rounded"
+                            style={{ background: `color-mix(in srgb, ${severityColor} 15%, transparent)`, color: severityColor }}>
+                            {evt.severity}
+                          </span>
+                        </div>
+                        <p className="text-[12px] mt-1 leading-relaxed" style={{ color: 'var(--color-text-muted)' }}>
+                          {evt.message}
+                        </p>
+                        <div className="flex items-center gap-3 mt-2">
+                          <span className="text-[11px]" style={{ color: 'var(--color-text-muted)', opacity: 0.6 }}>
+                            {new Date(evt.createdAt).toLocaleString()}
+                          </span>
+                          {evt.ipAddress && (
+                            <span className="text-[11px]" style={{ color: 'var(--color-text-muted)', opacity: 0.6 }}>
+                              IP: {evt.ipAddress}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Panel Footer */}
+        {notifications.length > 0 && (
+          <div className="px-5 py-3 shrink-0" style={{ borderTop: '1px solid var(--color-border)' }}>
+            <button
+              onClick={() => { setNotifOpen(false); router.push('/security'); }}
+              className="w-full py-2.5 rounded-lg text-[13px] font-semibold text-white text-center"
+              style={{ background: 'var(--color-primary)' }}
+            >
+              View all in Security
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
