@@ -163,6 +163,36 @@ export const authApi = {
       method: 'POST',
       body: JSON.stringify({ currentPassword, newPassword }),
     }),
+
+  forgotPassword: (email: string) =>
+    request<ApiResponse>('/auth/forgot-password', {
+      method: 'POST',
+      body: JSON.stringify({ email }),
+    }),
+
+  verifyResetCode: (email: string, code: string) =>
+    request<ApiResponse<{ resetToken: string }>>('/auth/verify-reset-code', {
+      method: 'POST',
+      body: JSON.stringify({ email, code }),
+    }),
+
+  resetPassword: (resetToken: string, newPassword: string) =>
+    request<ApiResponse>('/auth/reset-password', {
+      method: 'POST',
+      body: JSON.stringify({ resetToken, newPassword }),
+    }),
+
+  sendPhoneVerification: (phoneNumber: string) =>
+    request<ApiResponse>('/auth/send-phone-verification', {
+      method: 'POST',
+      body: JSON.stringify({ phoneNumber }),
+    }),
+
+  verifyPhoneCode: (code: string) =>
+    request<ApiResponse>('/auth/verify-phone-code', {
+      method: 'POST',
+      body: JSON.stringify({ code }),
+    }),
 };
 
 // ─── Users API ─────────────────────────────────────────

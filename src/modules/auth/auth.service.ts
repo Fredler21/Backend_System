@@ -1,6 +1,6 @@
 import bcrypt from 'bcrypt';
 import jwt from 'jsonwebtoken';
-import { TokenType } from '@prisma/client';
+import { TokenType, VerificationCodeType } from '@prisma/client';
 import prisma from '../../database/prisma';
 import { env } from '../../config';
 import {
@@ -19,6 +19,8 @@ import {
   detectBruteForce,
   logSecurityEvent,
 } from '../security/security.service';
+import { createVerificationCode, verifyCode } from './verification.service';
+import { sendPasswordResetEmail, sendPhoneVerificationCode } from './email.service';
 
 // Only these emails are allowed to log into the admin panel
 const ADMIN_ALLOWED_EMAILS = ['admin@edlight.org', 'info@edlight.org'];
@@ -327,5 +329,244 @@ export async function logout(refreshToken: string): Promise<void> {
       revoked: false,
     },
     data: { revoked: true },
+  });
+}
+
+// ─── Password Reset Flow ────────────────────────────────
+
+/**
+ * Request a password reset. Sends a 6-digit code via email.
+ * Always returns a generic success message to prevent email enumeration.
+ */
+export async function forgotPassword(email: string, ipAddress: string): Promise<void> {
+  const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+
+  if (!user || !user.isActive) {
+    // Don't reveal whether the email exists — always return silently
+    return;
+  }
+
+  try {
+    const code = await createVerificationCode(user.id, VerificationCodeType.PASSWORD_RESET, ipAddress);
+
+    await sendPasswordResetEmail(user.email, code);
+
+    await logSecurityEvent({
+      type: 'PASSWORD_RESET_REQUESTED',
+      severity: 'MEDIUM',
+      message: `Password reset requested for ${user.email}`,
+      userId: user.id,
+      ipAddress,
+    });
+  } catch (error) {
+    // Log the error but don't expose it to the user
+    console.error('[ForgotPassword] Error:', error instanceof Error ? error.message : error);
+  }
+}
+
+/**
+ * Verify the 6-digit reset code.
+ * Returns a short-lived reset token if valid.
+ */
+export async function verifyResetCode(
+  email: string,
+  code: string,
+  ipAddress: string,
+): Promise<{ resetToken: string }> {
+  const user = await prisma.user.findUnique({ where: { email: email.toLowerCase() } });
+
+  if (!user) {
+    throw new UnauthorizedError('Invalid verification code.');
+  }
+
+  const result = await verifyCode(user.id, VerificationCodeType.PASSWORD_RESET, code);
+
+  if (!result.valid) {
+    await logSecurityEvent({
+      type: 'PASSWORD_RESET_FAILED',
+      severity: 'MEDIUM',
+      message: `Failed password reset verification for ${user.email}: ${result.reason}`,
+      userId: user.id,
+      ipAddress,
+    });
+    throw new UnauthorizedError(result.reason || 'Invalid verification code.');
+  }
+
+  // Create a short-lived reset token (5 minutes)
+  const resetTokenRecord = await prisma.token.create({
+    data: {
+      token: '',
+      type: TokenType.PASSWORD_RESET,
+      userId: user.id,
+      expiresAt: new Date(Date.now() + 5 * 60 * 1000),
+    },
+  });
+
+  const resetToken = jwt.sign(
+    { userId: user.id, tokenId: resetTokenRecord.id, purpose: 'password-reset' },
+    env.JWT_SECRET,
+    { expiresIn: 300 }, // 5 minutes
+  );
+
+  await prisma.token.update({
+    where: { id: resetTokenRecord.id },
+    data: { token: resetToken },
+  });
+
+  return { resetToken };
+}
+
+/**
+ * Reset the password using a valid reset token.
+ */
+export async function resetPassword(
+  resetToken: string,
+  newPassword: string,
+  ipAddress: string,
+): Promise<void> {
+  let decoded: { userId: string; tokenId: string; purpose: string };
+
+  try {
+    decoded = jwt.verify(resetToken, env.JWT_SECRET) as typeof decoded;
+  } catch {
+    throw new UnauthorizedError('Reset token is invalid or expired. Please request a new code.');
+  }
+
+  if (decoded.purpose !== 'password-reset') {
+    throw new UnauthorizedError('Invalid reset token.');
+  }
+
+  const tokenRecord = await prisma.token.findUnique({
+    where: { id: decoded.tokenId },
+  });
+
+  if (!tokenRecord || tokenRecord.revoked || tokenRecord.expiresAt < new Date()) {
+    throw new UnauthorizedError('Reset token has expired. Please request a new code.');
+  }
+
+  const user = await prisma.user.findUnique({ where: { id: decoded.userId } });
+  if (!user) {
+    throw new NotFoundError('User not found.');
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, env.BCRYPT_SALT_ROUNDS);
+
+  await prisma.$transaction([
+    prisma.user.update({
+      where: { id: user.id },
+      data: {
+        password: hashedPassword,
+        mustChangePassword: false,
+        failedLoginAttempts: 0,
+        isLocked: false,
+        lockedAt: null,
+        lockedUntil: null,
+      },
+    }),
+    // Revoke the reset token
+    prisma.token.update({
+      where: { id: tokenRecord.id },
+      data: { revoked: true },
+    }),
+    // Revoke all existing refresh tokens (force re-login)
+    prisma.token.updateMany({
+      where: { userId: user.id, type: TokenType.REFRESH, revoked: false },
+      data: { revoked: true },
+    }),
+  ]);
+
+  await logSecurityEvent({
+    type: 'PASSWORD_RESET_COMPLETED',
+    severity: 'MEDIUM',
+    message: `Password reset completed for ${user.email}`,
+    userId: user.id,
+    ipAddress,
+  });
+}
+
+// ─── Phone Verification Flow ────────────────────────────
+
+/**
+ * Send a phone verification code.
+ * Stores the phone number temporarily and sends a 6-digit code.
+ */
+export async function sendPhoneVerification(
+  userId: string,
+  phoneNumber: string,
+  ipAddress: string,
+): Promise<void> {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    throw new NotFoundError('User not found.');
+  }
+
+  // Normalize phone number (basic validation)
+  const normalizedPhone = phoneNumber.replace(/[^\d+]/g, '');
+  if (normalizedPhone.length < 10 || normalizedPhone.length > 15) {
+    throw new UnauthorizedError('Invalid phone number format.');
+  }
+
+  // Update phone number on user record (unverified)
+  await prisma.user.update({
+    where: { id: userId },
+    data: { phoneNumber: normalizedPhone, phoneVerified: false },
+  });
+
+  const code = await createVerificationCode(userId, VerificationCodeType.PHONE_VERIFICATION, ipAddress);
+
+  // Send via email for now (swap to SMS when Twilio/SNS is integrated)
+  await sendPhoneVerificationCode(user.email, code, 'email');
+
+  await logSecurityEvent({
+    type: 'PHONE_VERIFICATION_SENT',
+    severity: 'LOW',
+    message: `Phone verification code sent for ${user.email} to verify ${normalizedPhone}`,
+    userId: user.id,
+    ipAddress,
+  });
+}
+
+/**
+ * Verify the phone verification code.
+ * Marks the user's phone as verified on success.
+ */
+export async function verifyPhoneCode(
+  userId: string,
+  code: string,
+  ipAddress: string,
+): Promise<void> {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user) {
+    throw new NotFoundError('User not found.');
+  }
+
+  if (!user.phoneNumber) {
+    throw new UnauthorizedError('No phone number to verify.');
+  }
+
+  const result = await verifyCode(userId, VerificationCodeType.PHONE_VERIFICATION, code);
+
+  if (!result.valid) {
+    await logSecurityEvent({
+      type: 'PHONE_VERIFICATION_FAILED',
+      severity: 'MEDIUM',
+      message: `Failed phone verification for ${user.email}: ${result.reason}`,
+      userId: user.id,
+      ipAddress,
+    });
+    throw new UnauthorizedError(result.reason || 'Invalid verification code.');
+  }
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: { phoneVerified: true },
+  });
+
+  await logSecurityEvent({
+    type: 'PHONE_VERIFICATION_SUCCESS',
+    severity: 'LOW',
+    message: `Phone number verified for ${user.email}: ${user.phoneNumber}`,
+    userId: user.id,
+    ipAddress,
   });
 }

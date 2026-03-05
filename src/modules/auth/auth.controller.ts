@@ -80,3 +80,73 @@ export async function changePassword(req: AuthenticatedRequest, res: Response, n
     next(error);
   }
 }
+
+// ─── Password Reset ─────────────────────────────────────
+
+/**
+ * POST /api/auth/forgot-password
+ */
+export async function forgotPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
+    await authService.forgotPassword(req.body.email, ipAddress);
+    // Always return success to prevent email enumeration
+    sendSuccess(res, 'If an account with that email exists, a verification code has been sent.');
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * POST /api/auth/verify-reset-code
+ */
+export async function verifyResetCode(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
+    const result = await authService.verifyResetCode(req.body.email, req.body.code, ipAddress);
+    sendSuccess(res, 'Code verified successfully', result);
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * POST /api/auth/reset-password
+ */
+export async function resetPassword(req: Request, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
+    await authService.resetPassword(req.body.resetToken, req.body.newPassword, ipAddress);
+    sendSuccess(res, 'Password has been reset successfully. You can now log in with your new password.');
+  } catch (error) {
+    next(error);
+  }
+}
+
+// ─── Phone Verification ─────────────────────────────────
+
+/**
+ * POST /api/auth/send-phone-verification
+ */
+export async function sendPhoneVerification(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
+    await authService.sendPhoneVerification(req.user!.userId, req.body.phoneNumber, ipAddress);
+    sendSuccess(res, 'Verification code sent successfully.');
+  } catch (error) {
+    next(error);
+  }
+}
+
+/**
+ * POST /api/auth/verify-phone-code
+ */
+export async function verifyPhoneCode(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const ipAddress = req.ip || req.socket.remoteAddress || 'unknown';
+    await authService.verifyPhoneCode(req.user!.userId, req.body.code, ipAddress);
+    sendSuccess(res, 'Phone number verified successfully.');
+  } catch (error) {
+    next(error);
+  }
+}

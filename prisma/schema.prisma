@@ -36,6 +36,12 @@ enum SecurityEventType {
   BRUTE_FORCE_DETECTED
   SUSPICIOUS_ACTIVITY
   PASSWORD_CHANGED
+  PASSWORD_RESET_REQUESTED
+  PASSWORD_RESET_COMPLETED
+  PASSWORD_RESET_FAILED
+  PHONE_VERIFICATION_SENT
+  PHONE_VERIFICATION_SUCCESS
+  PHONE_VERIFICATION_FAILED
   RATE_LIMIT_EXCEEDED
   UNAUTHORIZED_ACCESS
   ADMIN_INVITE_SENT
@@ -71,6 +77,12 @@ enum MigrationSource {
   SEED
 }
 
+enum VerificationCodeType {
+  PASSWORD_RESET
+  PHONE_VERIFICATION
+  EMAIL_VERIFICATION
+}
+
 // ─── User Model ─────────────────────────────────────────
 
 model User {
@@ -89,6 +101,11 @@ model User {
   lastLoginAt DateTime? @map("last_login_at")
   lastLoginIp String? @map("last_login_ip")
   mustChangePassword Boolean @default(false) @map("must_change_password")
+
+  // ─── Phone Verification ───────────────────────────────
+  phoneNumber    String?  @map("phone_number")
+  phoneVerified  Boolean  @default(false) @map("phone_verified")
+
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
@@ -106,9 +123,11 @@ model User {
   securityEvents  SecurityEvent[] @relation("UserSecurityEvents")
   auditLogs       AuditLog[]     @relation("AuditLogUser")
   auditLogsAdmin  AuditLog[]     @relation("AuditLogAdmin")
+  verificationCodes VerificationCode[]
   profile         Profile?
 
   @@index([firebaseUid])
+  @@index([phoneNumber])
   @@map("users")
 }
 
@@ -259,6 +278,30 @@ model FileRecord {
   @@index([uploadedBy])
   @@index([entityType, entityId])
   @@map("file_records")
+}
+
+// ─── Verification Code Model ────────────────────────────
+
+model VerificationCode {
+  id          String               @id @default(uuid())
+  codeHash    String               @map("code_hash")
+  type        VerificationCodeType
+  expiresAt   DateTime             @map("expires_at")
+  used        Boolean              @default(false)
+  usedAt      DateTime?            @map("used_at")
+  attempts    Int                  @default(0)
+  maxAttempts Int                  @default(5) @map("max_attempts")
+  ipAddress   String?              @map("ip_address")
+  metadata    Json?
+  createdAt   DateTime             @default(now()) @map("created_at")
+
+  userId String @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, type])
+  @@index([expiresAt])
+  @@index([createdAt])
+  @@map("verification_codes")
 }
 
 // ─── Token Model ────────────────────────────────────────

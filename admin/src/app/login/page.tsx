@@ -135,6 +135,12 @@ export default function LoginPage() {
                 'Sign in'
               )}
             </button>
+
+            <div className="text-center mt-3">
+              <a href="/forgot-password" className="text-sm hover:underline" style={{ color: 'var(--color-primary)' }}>
+                Forgot password?
+              </a>
+            </div>
           </form>
         </div>
 
