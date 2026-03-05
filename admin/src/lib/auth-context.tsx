@@ -32,7 +32,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const token = getAccessToken();
       if (!token) {
-        setState({ user: null, loading: false, error: null });
+        setState({ user: null, loading: false, error: null, mustChangePassword: false });
         return;
       }
       const res = await authApi.me();
