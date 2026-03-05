@@ -32,6 +32,14 @@ const envSchema = z.object({
   ADMIN_INVITE_EXPIRY_HOURS: z.coerce.number().min(1).default(24),
   ADMIN_ALLOWED_EMAILS: z.string().default('admin@edlight.org,info@edlight.org'),
   ADMIN_PANEL_URL: z.string().default('http://localhost:3001'),
+
+  // Firebase Migration (optional — only needed when running migration scripts)
+  FIREBASE_SERVICE_ACCOUNT_PATH: z.string().optional(),
+  FIREBASE_DATABASE_URL: z.string().optional(),
+  FIREBASE_STORAGE_BUCKET: z.string().optional(),
+  MIGRATION_DOWNLOAD_FILES: z.string().default('false'),
+  MIGRATION_DOWNLOAD_DIR: z.string().default('./migration-downloads'),
+  STORAGE_DRIVER: z.string().default('local'),
 });
 
 const parsed = envSchema.safeParse(process.env);

@@ -15,6 +15,7 @@ import authRoutes from './modules/auth/auth.routes';
 import userRoutes from './modules/users/users.routes';
 import securityRoutes from './modules/security/security.routes';
 import adminRoutes from './modules/admin/admin.routes';
+import adminManagementRoutes from './modules/admin/admin-management.routes';
 
 const app = express();
 
@@ -44,7 +45,7 @@ app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
   customSiteTitle: 'Edlight API Docs',
 }));
 
-// ─── Health Check ───────────────────────────────────────
+// ─── Health / Readiness / Metrics ───────────────────────
 
 app.get('/health', (_req, res) => {
   res.status(200).json({
@@ -52,7 +53,53 @@ app.get('/health', (_req, res) => {
     message: 'Edlight Backend is running',
     timestamp: new Date().toISOString(),
     environment: env.NODE_ENV,
+    version: '1.0.0',
   });
+});
+
+app.get('/readiness', async (_req, res) => {
+  try {
+    const { default: prisma } = await import('./database/prisma');
+    await prisma.$queryRaw`SELECT 1`;
+    res.status(200).json({
+      success: true,
+      message: 'Backend is ready',
+      database: 'connected',
+      timestamp: new Date().toISOString(),
+    });
+  } catch {
+    res.status(503).json({
+      success: false,
+      message: 'Backend is not ready',
+      database: 'disconnected',
+      timestamp: new Date().toISOString(),
+    });
+  }
+});
+
+app.get('/metrics', async (_req, res) => {
+  try {
+    const { default: prisma } = await import('./database/prisma');
+    const [userCount, activeUsers, lockedAccounts, blockedIps] = await Promise.all([
+      prisma.user.count(),
+      prisma.user.count({ where: { isActive: true } }),
+      prisma.user.count({ where: { isLocked: true } }),
+      prisma.blockedIp.count({ where: { active: true } }),
+    ]);
+    res.status(200).json({
+      success: true,
+      message: 'Metrics snapshot',
+      data: {
+        users: { total: userCount, active: activeUsers, locked: lockedAccounts },
+        security: { blockedIps },
+        uptime: process.uptime(),
+        memory: process.memoryUsage(),
+        timestamp: new Date().toISOString(),
+      },
+    });
+  } catch {
+    res.status(500).json({ success: false, message: 'Failed to collect metrics' });
+  }
 });
 
 // ─── Root Route ─────────────────────────────────────────
@@ -64,6 +111,8 @@ app.get('/', (_req, res) => {
     version: '1.0.0',
     docs: '/api/docs',
     health: '/health',
+    readiness: '/readiness',
+    metrics: '/metrics',
     endpoints: {
       auth: '/api/auth',
       users: '/api/users',
@@ -79,6 +128,7 @@ app.use(`${API_PREFIX}/auth`, authRoutes);
 app.use(`${API_PREFIX}/users`, userRoutes);
 app.use(`${API_PREFIX}/security`, securityRoutes);
 app.use(`${API_PREFIX}/admin`, adminRoutes);
+app.use(`${API_PREFIX}/admin`, adminManagementRoutes);
 
 // ─── 404 Handler ────────────────────────────────────────
 

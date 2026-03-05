@@ -16,6 +16,7 @@ enum Role {
   STUDENT
   DEVELOPER
   ADMIN
+  SUPER_ADMIN
 }
 
 enum TokenType {
@@ -41,6 +42,12 @@ enum SecurityEventType {
   ADMIN_INVITE_ACCEPTED
   ADMIN_INVITE_EXPIRED
   ADMIN_PASSWORD_SETUP
+  IMPERSONATION_START
+  IMPERSONATION_END
+  USER_DISABLED
+  USER_ENABLED
+  ROLE_CHANGED
+  DATA_MIGRATION
 }
 
 enum SecuritySeverity {
@@ -48,6 +55,20 @@ enum SecuritySeverity {
   MEDIUM
   HIGH
   CRITICAL
+}
+
+enum MigrationStatus {
+  PENDING
+  RUNNING
+  COMPLETED
+  FAILED
+  ROLLED_BACK
+}
+
+enum MigrationSource {
+  FIREBASE
+  MANUAL
+  SEED
 }
 
 // ─── User Model ─────────────────────────────────────────
@@ -70,11 +91,173 @@ model User {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  tokens        Token[]
-  loginAttempts LoginAttempt[]
-  securityEvents SecurityEvent[] @relation("UserSecurityEvents")
+  // ─── Firebase Migration Traceability ──────────────────
+  firebaseUid   String?          @unique @map("firebase_uid")
+  firebaseId    String?          @map("firebase_id")
+  source        MigrationSource  @default(MANUAL)
+  migratedAt    DateTime?        @map("migrated_at")
 
+  // ─── Display name from Firebase ───────────────────────
+  displayName   String?          @map("display_name")
+
+  tokens          Token[]
+  loginAttempts   LoginAttempt[]
+  securityEvents  SecurityEvent[] @relation("UserSecurityEvents")
+  auditLogs       AuditLog[]     @relation("AuditLogUser")
+  auditLogsAdmin  AuditLog[]     @relation("AuditLogAdmin")
+  profile         Profile?
+
+  @@index([firebaseUid])
   @@map("users")
+}
+
+// ─── Profile Model ──────────────────────────────────────
+
+model Profile {
+  id          String   @id @default(uuid())
+  bio         String?
+  avatarUrl   String?  @map("avatar_url")
+  phone       String?
+  address     String?
+  city        String?
+  country     String?
+  dateOfBirth DateTime? @map("date_of_birth")
+  metadata    Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // ─── Firebase Traceability ────────────────────────────
+  firebaseId  String?          @map("firebase_id")
+  source      MigrationSource  @default(MANUAL)
+
+  userId String @unique @map("user_id")
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("profiles")
+}
+
+// ─── Course Model ───────────────────────────────────────
+
+model Course {
+  id          String   @id @default(uuid())
+  title       String
+  slug        String   @unique
+  description String?
+  content     String?
+  category    String?
+  level       String?
+  imageUrl    String?  @map("image_url")
+  published   Boolean  @default(false)
+  metadata    Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // ─── Firebase Traceability ────────────────────────────
+  firebaseId  String?          @unique @map("firebase_id")
+  source      MigrationSource  @default(MANUAL)
+
+  @@index([slug])
+  @@index([category])
+  @@map("courses")
+}
+
+// ─── Scholarship Model ──────────────────────────────────
+
+model Scholarship {
+  id            String   @id @default(uuid())
+  title         String
+  description   String?
+  provider      String?
+  amount        Float?
+  currency      String?  @default("USD")
+  deadline      DateTime?
+  eligibility   String?
+  applicationUrl String? @map("application_url")
+  isActive      Boolean  @default(true) @map("is_active")
+  metadata      Json?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // ─── Firebase Traceability ────────────────────────────
+  firebaseId    String?          @unique @map("firebase_id")
+  source        MigrationSource  @default(MANUAL)
+
+  @@map("scholarships")
+}
+
+// ─── Post Model ─────────────────────────────────────────
+
+model Post {
+  id          String   @id @default(uuid())
+  title       String
+  slug        String   @unique
+  body        String?
+  excerpt     String?
+  imageUrl    String?  @map("image_url")
+  published   Boolean  @default(false)
+  authorId    String?  @map("author_id")
+  tags        String[] @default([])
+  metadata    Json?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // ─── Firebase Traceability ────────────────────────────
+  firebaseId  String?          @unique @map("firebase_id")
+  source      MigrationSource  @default(MANUAL)
+
+  @@index([slug])
+  @@index([authorId])
+  @@map("posts")
+}
+
+// ─── Activity Log Model ─────────────────────────────────
+
+model ActivityLog {
+  id         String   @id @default(uuid())
+  action     String
+  entity     String?
+  entityId   String?  @map("entity_id")
+  userId     String?  @map("user_id")
+  details    Json?
+  ipAddress  String?  @map("ip_address")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  // ─── Firebase Traceability ────────────────────────────
+  firebaseId String?          @map("firebase_id")
+  source     MigrationSource  @default(MANUAL)
+
+  @@index([userId])
+  @@index([action])
+  @@index([createdAt])
+  @@map("activity_logs")
+}
+
+// ─── File Record Model ──────────────────────────────────
+
+model FileRecord {
+  id            String   @id @default(uuid())
+  originalName  String   @map("original_name")
+  storagePath   String   @map("storage_path")
+  storageDriver String   @default("local") @map("storage_driver")
+  mimeType      String?  @map("mime_type")
+  sizeBytes     Int?     @map("size_bytes")
+  bucket        String?
+  uploadedBy    String?  @map("uploaded_by")
+  entityType    String?  @map("entity_type")
+  entityId      String?  @map("entity_id")
+  isPublic      Boolean  @default(false) @map("is_public")
+  metadata      Json?
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  // ─── Firebase Traceability ────────────────────────────
+  firebaseId    String?          @map("firebase_id")
+  firebasePath  String?          @map("firebase_path")
+  source        MigrationSource  @default(MANUAL)
+
+  @@index([uploadedBy])
+  @@index([entityType, entityId])
+  @@map("file_records")
 }
 
 // ─── Token Model ────────────────────────────────────────
@@ -178,4 +361,57 @@ model AdminInvite {
   @@index([token])
   @@index([expiresAt])
   @@map("admin_invites")
+}
+
+// ─── Admin Audit Log Model ──────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  action     String
+  resource   String
+  resourceId String?  @map("resource_id")
+  before     Json?
+  after      Json?
+  ipAddress  String?  @map("ip_address")
+  userAgent  String?  @map("user_agent")
+  createdAt  DateTime @default(now()) @map("created_at")
+
+  adminId    String   @map("admin_id")
+  admin      User     @relation("AuditLogAdmin", fields: [adminId], references: [id], onDelete: SetNull)
+
+  targetUserId String? @map("target_user_id")
+  targetUser   User?   @relation("AuditLogUser", fields: [targetUserId], references: [id], onDelete: SetNull)
+
+  @@index([adminId])
+  @@index([targetUserId])
+  @@index([action])
+  @@index([resource])
+  @@index([createdAt])
+  @@map("audit_logs")
+}
+
+// ─── Migration Checkpoint Model ─────────────────────────
+
+model MigrationCheckpoint {
+  id          String          @id @default(uuid())
+  module      String
+  status      MigrationStatus @default(PENDING)
+  totalItems  Int             @default(0) @map("total_items")
+  processed   Int             @default(0)
+  succeeded   Int             @default(0)
+  failed      Int             @default(0)
+  skipped     Int             @default(0)
+  duplicates  Int             @default(0)
+  lastKey     String?         @map("last_key")
+  errorLog    Json?           @map("error_log")
+  report      Json?
+  dryRun      Boolean         @default(false) @map("dry_run")
+  startedAt   DateTime?       @map("started_at")
+  completedAt DateTime?       @map("completed_at")
+  createdAt   DateTime        @default(now()) @map("created_at")
+  updatedAt   DateTime        @updatedAt @map("updated_at")
+
+  @@index([module])
+  @@index([status])
+  @@map("migration_checkpoints")
 }

@@ -56,6 +56,11 @@ export interface UserResponse {
   isActive: boolean;
   createdAt: Date;
   updatedAt: Date;
+  // Firebase migration traceability (optional in responses)
+  firebaseUid?: string | null;
+  source?: string;
+  migratedAt?: Date | null;
+  isLocked?: boolean;
 }
 
 export interface AuthTokens {

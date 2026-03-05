@@ -16,7 +16,17 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",
     "prisma:seed": "tsx src/database/seed.ts",
-    "prisma:studio": "prisma studio"
+    "prisma:studio": "prisma studio",
+    "migrate:auth": "tsx src/migrations/migrate.ts auth",
+    "migrate:users": "tsx src/migrations/migrate.ts users",
+    "migrate:profiles": "tsx src/migrations/migrate.ts profiles",
+    "migrate:courses": "tsx src/migrations/migrate.ts courses",
+    "migrate:scholarships": "tsx src/migrations/migrate.ts scholarships",
+    "migrate:posts": "tsx src/migrations/migrate.ts posts",
+    "migrate:activity_logs": "tsx src/migrations/migrate.ts activity_logs",
+    "migrate:files": "tsx src/migrations/migrate.ts files",
+    "migrate:all": "tsx src/migrations/migrate.ts all",
+    "migrate:all:dry": "tsx src/migrations/migrate.ts all --dry-run"
   },
   "prisma": {
     "seed": "tsx src/database/seed.ts"
