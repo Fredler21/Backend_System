@@ -8,11 +8,13 @@ interface AuthState {
   user: User | null;
   loading: boolean;
   error: string | null;
+  mustChangePassword: boolean;
 }
 
 interface AuthContextValue extends AuthState {
   login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
+  clearMustChangePassword: () => void;
   isAdmin: boolean;
 }
 
@@ -23,6 +25,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     user: null,
     loading: true,
     error: null,
+    mustChangePassword: false,
   });
 
   const fetchUser = useCallback(async () => {
@@ -34,14 +37,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       const res = await authApi.me();
       if (res.success && res.data) {
-        setState({ user: res.data, loading: false, error: null });
+        setState({ user: res.data, loading: false, error: null, mustChangePassword: false });
       } else {
         clearTokens();
-        setState({ user: null, loading: false, error: null });
+        setState({ user: null, loading: false, error: null, mustChangePassword: false });
       }
     } catch {
       clearTokens();
-      setState({ user: null, loading: false, error: null });
+      setState({ user: null, loading: false, error: null, mustChangePassword: false });
     }
   }, []);
 
@@ -54,16 +57,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const res = await authApi.login({ email, password });
       if (res.success && res.data) {
-        const { user, tokens } = res.data;
+        const { user, tokens, mustChangePassword } = res.data;
         if (user.role !== 'ADMIN') {
           throw new Error('Access denied. Admin privileges required.');
         }
         setTokens(tokens.accessToken, tokens.refreshToken);
-        setState({ user, loading: false, error: null });
+        setState({ user, loading: false, error: null, mustChangePassword: mustChangePassword ?? false });
       }
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Login failed';
-      setState({ user: null, loading: false, error: message });
+      setState({ user: null, loading: false, error: message, mustChangePassword: false });
       throw err;
     }
   };
@@ -75,8 +78,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       // ignore logout errors
     } finally {
       clearTokens();
-      setState({ user: null, loading: false, error: null });
+      setState({ user: null, loading: false, error: null, mustChangePassword: false });
     }
+  };
+
+  const clearMustChangePassword = () => {
+    setState((s) => ({ ...s, mustChangePassword: false }));
   };
 
   return (
@@ -85,6 +92,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         ...state,
         login,
         logout,
+        clearMustChangePassword,
         isAdmin: state.user?.role === 'ADMIN',
       }}
     >

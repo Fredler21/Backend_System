@@ -30,6 +30,7 @@ function toUserResponse(user: {
   lastName: string;
   role: string;
   isActive: boolean;
+  mustChangePassword?: boolean;
   createdAt: Date;
   updatedAt: Date;
   password?: string | null;
@@ -243,7 +244,38 @@ export async function login(input: LoginInput, ipAddress: string, userAgent?: st
   return {
     user: toUserResponse(user),
     tokens,
+    mustChangePassword: user.mustChangePassword ?? false,
   };
+}
+
+/**
+ * Change password for authenticated user.
+ * Clears the mustChangePassword flag.
+ */
+export async function changePassword(
+  userId: string,
+  currentPassword: string,
+  newPassword: string,
+): Promise<void> {
+  const user = await prisma.user.findUnique({ where: { id: userId } });
+  if (!user || !user.password) {
+    throw new NotFoundError('User not found');
+  }
+
+  const isValid = await bcrypt.compare(currentPassword, user.password);
+  if (!isValid) {
+    throw new UnauthorizedError('Current password is incorrect');
+  }
+
+  const hashedPassword = await bcrypt.hash(newPassword, env.BCRYPT_SALT_ROUNDS);
+
+  await prisma.user.update({
+    where: { id: userId },
+    data: {
+      password: hashedPassword,
+      mustChangePassword: false,
+    },
+  });
 }
 
 /**

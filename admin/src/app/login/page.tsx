@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { Shield, Eye, EyeOff, Loader2 } from 'lucide-react';
@@ -11,8 +11,9 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [loginSuccess, setLoginSuccess] = useState(false);
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, mustChangePassword, user } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,13 +22,24 @@ export default function LoginPage() {
 
     try {
       await login(email, password);
-      router.push('/dashboard');
+      setLoginSuccess(true);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Authentication failed');
     } finally {
       setLoading(false);
     }
   };
+
+  // Redirect after successful login
+  useEffect(() => {
+    if (loginSuccess && user) {
+      if (mustChangePassword) {
+        router.push('/change-password');
+      } else {
+        router.push('/dashboard');
+      }
+    }
+  }, [loginSuccess, user, mustChangePassword, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'var(--color-bg)' }}>
@@ -65,7 +77,7 @@ export default function LoginPage() {
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="admin@edlight.io"
+                placeholder="admin@edlight.org"
                 required
                 className="w-full px-4 py-2.5 rounded-lg border text-sm transition-colors focus:border-[var(--color-primary)]"
                 style={{

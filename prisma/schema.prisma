@@ -88,6 +88,7 @@ model User {
   lastFailedLoginAt DateTime? @map("last_failed_login_at")
   lastLoginAt DateTime? @map("last_login_at")
   lastLoginIp String? @map("last_login_ip")
+  mustChangePassword Boolean @default(false) @map("must_change_password")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 

@@ -31,6 +31,7 @@ export interface LoginRequest {
 export interface LoginResponse {
   user: User;
   tokens: AuthTokens;
+  mustChangePassword?: boolean;
 }
 
 // ─── User ───────────────────────────────────────────────

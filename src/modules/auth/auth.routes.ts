@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import * as authController from './auth.controller';
 import { validate, authenticate } from '../../middleware';
-import { registerSchema, loginSchema, refreshTokenSchema } from './auth.schema';
+import { registerSchema, loginSchema, refreshTokenSchema, changePasswordSchema } from './auth.schema';
 import { authRateLimiter } from '../security/rateLimiter';
 
 const router = Router();
@@ -118,5 +118,6 @@ router.post('/refresh', validate(refreshTokenSchema), authController.refresh);
  */
 router.get('/me', authenticate, authController.me);
 router.post('/logout', authenticate, validate(refreshTokenSchema), authController.logout);
+router.post('/change-password', authenticate, validate(changePasswordSchema), authController.changePassword);
 
 export default router;

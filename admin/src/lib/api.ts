@@ -157,6 +157,12 @@ export const authApi = {
       body: JSON.stringify({ refreshToken: rt }),
     });
   },
+
+  changePassword: (currentPassword: string, newPassword: string) =>
+    request<ApiResponse>('/auth/change-password', {
+      method: 'POST',
+      body: JSON.stringify({ currentPassword, newPassword }),
+    }),
 };
 
 // ─── Users API ─────────────────────────────────────────

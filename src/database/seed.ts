@@ -11,13 +11,14 @@ async function main() {
 
   const admin = await prisma.user.upsert({
     where: { email: 'admin@edlight.org' },
-    update: {},
+    update: { mustChangePassword: true },
     create: {
       email: 'admin@edlight.org',
       password: hashedPassword,
       firstName: 'Edlight',
       lastName: 'Admin',
       role: Role.ADMIN,
+      mustChangePassword: true,
     },
   });
 
@@ -28,13 +29,14 @@ async function main() {
 
   const infoAdmin = await prisma.user.upsert({
     where: { email: 'info@edlight.org' },
-    update: {},
+    update: { mustChangePassword: true },
     create: {
       email: 'info@edlight.org',
       password: infoPassword,
       firstName: 'Edlight',
       lastName: 'Info',
       role: Role.ADMIN,
+      mustChangePassword: true,
     },
   });
 

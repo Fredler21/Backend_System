@@ -67,3 +67,16 @@ export async function logout(req: Request, res: Response, next: NextFunction): P
     next(error);
   }
 }
+
+/**
+ * POST /api/auth/change-password
+ */
+export async function changePassword(req: AuthenticatedRequest, res: Response, next: NextFunction): Promise<void> {
+  try {
+    const { currentPassword, newPassword } = req.body;
+    await authService.changePassword(req.user!.userId, currentPassword, newPassword);
+    sendSuccess(res, 'Password changed successfully');
+  } catch (error) {
+    next(error);
+  }
+}

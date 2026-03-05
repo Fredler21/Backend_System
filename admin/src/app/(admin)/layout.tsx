@@ -20,7 +20,7 @@ const navItems = [
 ];
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
-  const { user, loading, logout, isAdmin } = useAuth();
+  const { user, loading, logout, isAdmin, mustChangePassword } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
 
@@ -31,7 +31,10 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     if (!loading && user && !isAdmin) {
       router.replace('/login');
     }
-  }, [user, loading, isAdmin, router]);
+    if (!loading && user && mustChangePassword) {
+      router.replace('/change-password');
+    }
+  }, [user, loading, isAdmin, mustChangePassword, router]);
 
   if (loading) {
     return (

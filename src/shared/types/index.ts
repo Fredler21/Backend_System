@@ -61,6 +61,7 @@ export interface UserResponse {
   source?: string;
   migratedAt?: Date | null;
   isLocked?: boolean;
+  mustChangePassword?: boolean;
 }
 
 export interface AuthTokens {
@@ -71,4 +72,5 @@ export interface AuthTokens {
 export interface LoginResponse {
   user: UserResponse;
   tokens: AuthTokens;
+  mustChangePassword?: boolean;
 }
