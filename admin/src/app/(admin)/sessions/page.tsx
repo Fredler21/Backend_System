@@ -72,17 +72,17 @@ export default function SessionsPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>Sessions</h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
+          <h1 className="text-xl sm:text-2xl font-bold" style={{ color: 'var(--color-text)' }}>Sessions</h1>
+          <p className="text-xs sm:text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
             Authenticated sessions and login history
           </p>
         </div>
         <button
           onClick={() => fetchData(true)}
           disabled={refreshing}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
+          className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-all self-start"
           style={{
             background: 'var(--color-primary-light)',
             color: 'var(--color-primary)',
@@ -96,8 +96,8 @@ export default function SessionsPage() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-        <div className="rounded-xl border p-5 animate-fade-in stagger-1"
+      <div className="grid grid-cols-2 gap-3 sm:gap-4 mb-4 sm:mb-6">
+        <div className="rounded-xl border p-3 sm:p-5 animate-fade-in stagger-1"
           style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', boxShadow: 'var(--shadow-card)' }}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center"
@@ -105,12 +105,12 @@ export default function SessionsPage() {
               <Wifi className="w-5 h-5" style={{ color: 'var(--color-success)' }} />
             </div>
             <div>
-              <p className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>{total}</p>
+              <p className="text-lg sm:text-2xl font-bold" style={{ color: 'var(--color-text)' }}>{total}</p>
               <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Total Sessions</p>
             </div>
           </div>
         </div>
-        <div className="rounded-xl border p-5 animate-fade-in stagger-2"
+        <div className="rounded-xl border p-3 sm:p-5 animate-fade-in stagger-2"
           style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', boxShadow: 'var(--shadow-card)' }}>
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl flex items-center justify-center"
@@ -118,7 +118,7 @@ export default function SessionsPage() {
               <Clock className="w-5 h-5" style={{ color: 'var(--color-warning)' }} />
             </div>
             <div>
-              <p className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
+              <p className="text-base sm:text-2xl font-bold" style={{ color: 'var(--color-text)' }}>
                 {attempts.length > 0 ? timeAgo(attempts[0].createdAt) : 'N/A'}
               </p>
               <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Last Session</p>
@@ -149,14 +149,14 @@ export default function SessionsPage() {
             return (
               <div
                 key={session.id}
-                className={`card-interactive rounded-xl border p-5 animate-fade-in stagger-${Math.min(index + 1, 8)}`}
+                className={`card-interactive rounded-xl border p-3 sm:p-5 animate-fade-in stagger-${Math.min(index + 1, 8)}`}
                 style={{
                   background: 'var(--color-surface)',
                   borderColor: 'var(--color-border)',
                   boxShadow: 'var(--shadow-card)',
                 }}
               >
-                <div className="flex items-start gap-4">
+                <div className="flex items-start gap-3 sm:gap-4">
                   {/* Avatar */}
                   <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"
                     style={{ background: 'var(--color-primary-light)' }}>

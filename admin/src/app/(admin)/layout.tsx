@@ -224,7 +224,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       <div className="flex-1 flex flex-col min-h-screen">
         {/* Top Bar */}
         <header
-          className="h-16 flex items-center justify-between px-8 shrink-0 sticky top-0 z-20"
+          className="h-14 sm:h-16 flex items-center justify-between px-3 sm:px-8 shrink-0 sticky top-0 z-20"
           style={{
             background: 'var(--color-surface)',
             borderBottom: '1px solid var(--color-border)',
@@ -280,7 +280,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             </button>
 
             {/* Divider */}
-            <div className="w-px h-8 mx-2" style={{ background: 'var(--color-border)' }} />
+            <div className="w-px h-8 mx-1 sm:mx-2 hidden sm:block" style={{ background: 'var(--color-border)' }} />
 
             {/* Profile Dropdown */}
             <div className="relative">
@@ -296,10 +296,10 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
                 >
                   {user.firstName[0]}{user.lastName[0]}
                 </div>
-                <span className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
+                <span className="text-sm font-medium hidden sm:inline" style={{ color: 'var(--color-text)' }}>
                   {user.firstName}
                 </span>
-                <ChevronDown className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
+                <ChevronDown className="w-4 h-4 hidden sm:block" style={{ color: 'var(--color-text-muted)' }} />
               </button>
 
               {profileOpen && (
@@ -344,7 +344,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
         </header>
 
         {/* Main content */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-8">
+        <main className="flex-1 overflow-y-auto p-3 sm:p-6 lg:p-8">
           <div className="max-w-[1400px] mx-auto">
             {children}
           </div>

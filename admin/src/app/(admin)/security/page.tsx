@@ -46,15 +46,15 @@ export default function SecurityPage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>Security</h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold" style={{ color: 'var(--color-text)' }}>Security</h1>
+        <p className="text-xs sm:text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
           Audit logs, login monitoring, and IP management
         </p>
       </div>
 
       {/* Tabs */}
-      <div className="flex items-center gap-1 mb-6 border-b" style={{ borderColor: 'var(--color-border)' }}>
+      <div className="flex items-center gap-0 sm:gap-1 mb-4 sm:mb-6 border-b overflow-x-auto" style={{ borderColor: 'var(--color-border)' }}>
         {([
           { key: 'events' as Tab, label: 'Audit Events', icon: ShieldAlert },
           { key: 'logins' as Tab, label: 'Login Attempts', icon: Lock },
@@ -63,7 +63,7 @@ export default function SecurityPage() {
           <button
             key={t.key}
             onClick={() => setTab(t.key)}
-            className="flex items-center gap-2 px-4 py-3 text-sm font-medium border-b-2 -mb-[1px] transition-colors"
+            className="flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm font-medium border-b-2 -mb-[1px] transition-colors whitespace-nowrap"
             style={{
               borderColor: tab === t.key ? 'var(--color-primary)' : 'transparent',
               color: tab === t.key ? 'var(--color-primary)' : 'var(--color-text-muted)',
@@ -130,11 +130,11 @@ function EventsTab() {
   return (
     <div>
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3 mb-4">
-        <Filter className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
+      <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 sm:gap-3 mb-4">
+        <Filter className="w-4 h-4 hidden sm:block" style={{ color: 'var(--color-text-muted)' }} />
         <select
           value={severity} onChange={(e) => setSeverity(e.target.value)}
-          className="px-3 py-2 rounded-lg border text-sm"
+          className="px-3 py-2 rounded-lg border text-sm w-full sm:w-auto"
           style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}
         >
           <option value="">All Severities</option>
@@ -143,7 +143,7 @@ function EventsTab() {
 
         <select
           value={type} onChange={(e) => setType(e.target.value)}
-          className="px-3 py-2 rounded-lg border text-sm"
+          className="px-3 py-2 rounded-lg border text-sm w-full sm:w-auto"
           style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}
         >
           <option value="">All Types</option>
@@ -152,7 +152,7 @@ function EventsTab() {
 
         <select
           value={resolved} onChange={(e) => setResolved(e.target.value)}
-          className="px-3 py-2 rounded-lg border text-sm"
+          className="px-3 py-2 rounded-lg border text-sm w-full sm:w-auto"
           style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}
         >
           <option value="">All Status</option>
@@ -268,18 +268,20 @@ function LoginsTab() {
 
   return (
     <div>
-      <div className="flex items-center gap-3 mb-4">
-        <Filter className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
-        <select
-          value={success} onChange={(e) => setSuccess(e.target.value)}
-          className="px-3 py-2 rounded-lg border text-sm"
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 mb-4">
+        <div className="flex items-center gap-2">
+          <Filter className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
+          <select
+            value={success} onChange={(e) => setSuccess(e.target.value)}
+            className="flex-1 sm:flex-none px-3 py-2 rounded-lg border text-sm"
           style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}
         >
           <option value="">All Attempts</option>
           <option value="true">Successful</option>
           <option value="false">Failed</option>
-        </select>
-        <span className="text-sm ml-auto" style={{ color: 'var(--color-text-muted)' }}>
+          </select>
+        </div>
+        <span className="text-sm sm:ml-auto" style={{ color: 'var(--color-text-muted)' }}>
           {total} attempt{total !== 1 ? 's' : ''}
         </span>
       </div>
@@ -401,13 +403,13 @@ function BlockedTab() {
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between gap-3 mb-4">
         <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
           {total} blocked IP{total !== 1 ? 's' : ''}
         </span>
         <button
           onClick={() => setBlockModal(true)}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold text-white"
+          className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-xs sm:text-sm font-semibold text-white"
           style={{ background: 'var(--color-danger)' }}
         >
           <Ban className="w-4 h-4" /> Block IP
@@ -475,7 +477,7 @@ function BlockedTab() {
       {blockModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
           <div
-            className="w-full max-w-sm rounded-2xl p-6 border"
+            className="w-full max-w-sm rounded-2xl p-5 sm:p-6 border mx-4 sm:mx-0"
             style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
           >
             <h3 className="text-lg font-semibold mb-4" style={{ color: 'var(--color-text)' }}>Block IP Address</h3>

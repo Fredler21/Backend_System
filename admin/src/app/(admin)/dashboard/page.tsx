@@ -245,17 +245,17 @@ export default function DashboardPage() {
   return (
     <div>
       {/* ─── Header ──────────────────────────────────────── */}
-      <div className="flex items-center justify-between mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>Dashboard</h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
+          <h1 className="text-xl sm:text-2xl font-bold" style={{ color: 'var(--color-text)' }}>Dashboard</h1>
+          <p className="text-xs sm:text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
             Real-time platform overview and security monitoring
           </p>
         </div>
         <button
           onClick={() => loadData(true)}
           disabled={refreshing}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all"
+          className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-all self-start"
           style={{
             background: 'var(--color-primary-light)',
             color: 'var(--color-primary)',
@@ -269,37 +269,37 @@ export default function DashboardPage() {
       </div>
 
       {/* ─── Stat Cards Grid ─────────────────────────────── */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mb-6 sm:mb-8">
         {statCards.map((card, index) => (
           <button
             key={card.label}
             onClick={() => router.push(card.href)}
-            className={`card-interactive rounded-xl p-5 border text-left animate-fade-in stagger-${index + 1}`}
+            className={`card-interactive rounded-xl p-3 sm:p-5 border text-left animate-fade-in stagger-${index + 1}`}
             style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
           >
-            <div className="flex items-start justify-between mb-4">
+            <div className="flex items-start justify-between mb-2 sm:mb-4">
               <div
-                className="w-10 h-10 rounded-xl flex items-center justify-center"
+                className="w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex items-center justify-center"
                 style={{ background: card.bg }}
               >
-                <card.icon className="w-5 h-5" style={{ color: card.color }} />
+                <card.icon className="w-4 h-4 sm:w-5 sm:h-5" style={{ color: card.color }} />
               </div>
-              <div className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-full"
+              <div className="flex items-center gap-1 text-[10px] sm:text-xs font-medium px-1.5 sm:px-2 py-0.5 sm:py-1 rounded-full"
                 style={{
                   background: card.trendUp ? 'var(--color-success-light)' : 'var(--color-danger-light)',
                   color: card.trendUp ? 'var(--color-success)' : 'var(--color-danger)',
                 }}>
                 {card.trendUp ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                {card.trend}
+                <span className="hidden sm:inline">{card.trend}</span>
               </div>
             </div>
-            <p className="text-3xl font-bold mb-1" style={{ color: 'var(--color-text)' }}>
+            <p className="text-xl sm:text-3xl font-bold mb-0.5 sm:mb-1" style={{ color: 'var(--color-text)' }}>
               {card.value.toLocaleString()}
             </p>
-            <p className="text-sm font-medium" style={{ color: 'var(--color-text-secondary)' }}>
+            <p className="text-xs sm:text-sm font-medium" style={{ color: 'var(--color-text-secondary)' }}>
               {card.label}
             </p>
-            <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
+            <p className="text-[10px] sm:text-xs mt-0.5 hidden sm:block" style={{ color: 'var(--color-text-muted)' }}>
               {card.description}
             </p>
           </button>
@@ -307,17 +307,17 @@ export default function DashboardPage() {
       </div>
 
       {/* ─── Charts Row ──────────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 mb-6 sm:mb-8">
         {/* Login Success Rate */}
         <button
           onClick={() => router.push('/activity')}
-          className="rounded-xl border p-6 animate-fade-in stagger-7 text-left transition-all card-interactive"
+          className="rounded-xl border p-4 sm:p-6 animate-fade-in stagger-7 text-left transition-all card-interactive"
           style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', boxShadow: 'var(--shadow-card)' }}>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Login Success Rate</h3>
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h3 className="text-xs sm:text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Login Success Rate</h3>
             <TrendingUp className="w-4 h-4" style={{ color: 'var(--color-success)' }} />
           </div>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 sm:gap-6">
             <div className="relative">
               <DonutChart segments={[
                 { value: security.successfulLoginsLast24h, color: 'var(--color-success)', label: 'Success' },
@@ -347,13 +347,13 @@ export default function DashboardPage() {
         {/* Event Severity Breakdown */}
         <button
           onClick={() => router.push('/security')}
-          className="rounded-xl border p-6 animate-fade-in stagger-7 text-left transition-all card-interactive"
+          className="rounded-xl border p-4 sm:p-6 animate-fade-in stagger-7 text-left transition-all card-interactive"
           style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', boxShadow: 'var(--shadow-card)' }}>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Event Severity</h3>
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h3 className="text-xs sm:text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Event Severity</h3>
             <ShieldAlert className="w-4 h-4" style={{ color: 'var(--color-warning)' }} />
           </div>
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-4 sm:gap-6">
             <DonutChart segments={severityBreakdown} size={90} />
             <div className="space-y-2">
               {severityBreakdown.map((seg) => (
@@ -371,10 +371,10 @@ export default function DashboardPage() {
         {/* Activity Pattern */}
         <button
           onClick={() => router.push('/activity')}
-          className="rounded-xl border p-6 animate-fade-in stagger-8 text-left transition-all card-interactive"
+          className="rounded-xl border p-4 sm:p-6 animate-fade-in stagger-8 text-left transition-all card-interactive sm:col-span-2 lg:col-span-1"
           style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', boxShadow: 'var(--shadow-card)' }}>
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Activity Trend</h3>
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
+            <h3 className="text-xs sm:text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Activity Trend</h3>
             <Activity className="w-4 h-4" style={{ color: 'var(--color-accent)' }} />
           </div>
           <MiniBarChart data={activityPattern} color="var(--color-primary)" />
@@ -388,9 +388,9 @@ export default function DashboardPage() {
       </div>
 
       {/* ─── Quick Actions + Security Alerts ─────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 sm:gap-6 mb-6 sm:mb-8">
         {/* Quick Actions */}
-        <div className="rounded-xl border p-6"
+        <div className="rounded-xl border p-4 sm:p-6"
           style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', boxShadow: 'var(--shadow-card)' }}>
           <h3 className="text-sm font-semibold mb-4" style={{ color: 'var(--color-text)' }}>
             <Zap className="w-4 h-4 inline mr-2" style={{ color: 'var(--color-warning)' }} />
@@ -419,9 +419,9 @@ export default function DashboardPage() {
         {/* Security Alerts Panel */}
         <div className="lg:col-span-3 rounded-xl border"
           style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', boxShadow: 'var(--shadow-card)' }}>
-          <div className="px-6 py-4 flex items-center justify-between border-b" style={{ borderColor: 'var(--color-border)' }}>
+          <div className="px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between border-b" style={{ borderColor: 'var(--color-border)' }}>
             <div className="flex items-center gap-2">
-              <h3 className="font-semibold" style={{ color: 'var(--color-text)' }}>Security Alerts</h3>
+              <h3 className="text-sm sm:text-base font-semibold" style={{ color: 'var(--color-text)' }}>Security Alerts</h3>
               {security.unresolvedEvents > 0 && (
                 <span className="text-xs font-bold px-2 py-0.5 rounded-full"
                   style={{ background: 'var(--color-danger-light)', color: 'var(--color-danger)' }}>
@@ -439,7 +439,7 @@ export default function DashboardPage() {
           </div>
           <div className="divide-y" style={{ borderColor: 'var(--color-border)' }}>
             {security.recentEvents.length === 0 ? (
-              <div className="px-6 py-12 text-center">
+              <div className="px-4 sm:px-6 py-8 sm:py-12 text-center">
                 <ShieldCheck className="w-10 h-10 mx-auto mb-3" style={{ color: 'var(--color-success)' }} />
                 <p className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>All clear</p>
                 <p className="text-xs mt-1" style={{ color: 'var(--color-text-muted)' }}>No security events to report</p>
@@ -450,7 +450,7 @@ export default function DashboardPage() {
                 return (
                   <div
                     key={event.id}
-                    className="px-6 py-3.5 flex items-center gap-4 transition-colors cursor-pointer"
+                    className="px-4 sm:px-6 py-3 sm:py-3.5 flex items-start sm:items-center gap-3 sm:gap-4 transition-colors cursor-pointer"
                     style={{ borderColor: 'var(--color-border)' }}
                     onClick={() => router.push('/security')}
                     onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-surface-hover)'; }}
@@ -488,10 +488,10 @@ export default function DashboardPage() {
       {/* ─── Recent Activity Timeline ────────────────────── */}
       <div className="rounded-xl border"
         style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', boxShadow: 'var(--shadow-card)' }}>
-        <div className="px-6 py-4 flex items-center justify-between border-b" style={{ borderColor: 'var(--color-border)' }}>
+        <div className="px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between border-b" style={{ borderColor: 'var(--color-border)' }}>
           <div className="flex items-center gap-2">
             <Clock className="w-4 h-4" style={{ color: 'var(--color-accent)' }} />
-            <h3 className="font-semibold" style={{ color: 'var(--color-text)' }}>Recent Activity</h3>
+            <h3 className="text-sm sm:text-base font-semibold" style={{ color: 'var(--color-text)' }}>Recent Activity</h3>
           </div>
           <button
             onClick={() => router.push('/activity')}
@@ -501,7 +501,7 @@ export default function DashboardPage() {
             View All <ChevronRight className="w-3 h-3" />
           </button>
         </div>
-        <div className="p-6">
+        <div className="p-4 sm:p-6">
           {security.recentEvents.length === 0 ? (
             <p className="text-sm text-center py-8" style={{ color: 'var(--color-text-muted)' }}>
               No recent activity

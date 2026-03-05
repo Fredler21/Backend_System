@@ -89,16 +89,16 @@ export default function UsersPage() {
 
   return (
     <div>
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>Users</h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
+      <div className="mb-4 sm:mb-6">
+        <h1 className="text-xl sm:text-2xl font-bold" style={{ color: 'var(--color-text)' }}>Users</h1>
+        <p className="text-xs sm:text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
           Manage platform user accounts, roles, and access
         </p>
       </div>
 
       {/* Filters */}
-      <div className="flex flex-wrap items-center gap-3 mb-6">
-        <div className="relative flex-1 min-w-[240px] max-w-md">
+      <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 mb-4 sm:mb-6">
+        <div className="relative flex-1 min-w-0 sm:min-w-[240px] sm:max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
           <input
             type="text"
@@ -114,25 +114,27 @@ export default function UsersPage() {
           />
         </div>
 
-        <select
-          value={roleFilter}
-          onChange={(e) => setRoleFilter(e.target.value)}
-          className="px-4 py-2.5 rounded-lg border text-sm appearance-none cursor-pointer"
-          style={{
-            background: 'var(--color-surface)',
-            borderColor: 'var(--color-border)',
-            color: 'var(--color-text-secondary)',
-          }}
-        >
-          <option value="">All Roles</option>
-          {roles.map((r) => (
-            <option key={r} value={r}>{r}</option>
-          ))}
-        </select>
+        <div className="flex items-center gap-3">
+          <select
+            value={roleFilter}
+            onChange={(e) => setRoleFilter(e.target.value)}
+            className="flex-1 sm:flex-none px-4 py-2.5 rounded-lg border text-sm appearance-none cursor-pointer"
+            style={{
+              background: 'var(--color-surface)',
+              borderColor: 'var(--color-border)',
+              color: 'var(--color-text-secondary)',
+            }}
+          >
+            <option value="">All Roles</option>
+            {roles.map((r) => (
+              <option key={r} value={r}>{r}</option>
+            ))}
+          </select>
 
-        <span className="text-sm ml-auto" style={{ color: 'var(--color-text-muted)' }}>
-          {total} user{total !== 1 ? 's' : ''}
-        </span>
+          <span className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+            {total} user{total !== 1 ? 's' : ''}
+          </span>
+        </div>
       </div>
 
       {/* Table */}
@@ -289,7 +291,7 @@ export default function UsersPage() {
       {roleModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
           <div
-            className="w-full max-w-sm rounded-2xl p-6 border"
+            className="w-full max-w-sm rounded-2xl p-5 sm:p-6 border mx-4 sm:mx-0"
             style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
           >
             <h3 className="text-lg font-semibold mb-1" style={{ color: 'var(--color-text)' }}>

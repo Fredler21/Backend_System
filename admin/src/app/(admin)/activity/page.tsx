@@ -271,17 +271,17 @@ export default function ActivityPage() {
   return (
     <div>
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 mb-6 sm:mb-8">
         <div>
-          <h1 className="text-2xl font-bold" style={{ color: 'var(--color-text)' }}>Activity Trends</h1>
-          <p className="text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
+          <h1 className="text-xl sm:text-2xl font-bold" style={{ color: 'var(--color-text)' }}>Activity Trends</h1>
+          <p className="text-xs sm:text-sm mt-1" style={{ color: 'var(--color-text-secondary)' }}>
             Login activity analytics &amp; authentication trends
           </p>
         </div>
         <button
           onClick={() => fetchData(true)}
           disabled={refreshing}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all self-start"
+          className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-lg text-sm font-medium transition-all self-start"
           style={{
             background: 'var(--color-primary-light)',
             color: 'var(--color-primary)',
@@ -295,7 +295,7 @@ export default function ActivityPage() {
       </div>
 
       {/* View Toggle */}
-      <div className="flex flex-wrap items-center gap-3 mb-6">
+      <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-3 mb-4 sm:mb-6">
         <div className="flex items-center gap-1 rounded-xl border p-1"
           style={{ borderColor: 'var(--color-border)', background: 'var(--color-surface)' }}>
           {([
@@ -346,9 +346,9 @@ export default function ActivityPage() {
         <div className="space-y-6">
 
           {/* ─── Stat Cards ────────────────────────────────── */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
             {/* Total Activity */}
-            <div className="rounded-2xl border p-5 relative overflow-hidden"
+            <div className="rounded-2xl border p-3 sm:p-5 relative overflow-hidden"
               style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', boxShadow: 'var(--shadow-card)' }}>
               <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full opacity-[0.07]"
                 style={{ background: 'var(--color-primary)' }} />
@@ -356,15 +356,15 @@ export default function ActivityPage() {
                 style={{ background: 'var(--color-primary-light)' }}>
                 <Activity className="w-4 h-4" style={{ color: 'var(--color-primary)' }} />
               </div>
-              <p className="text-3xl font-extrabold" style={{ color: 'var(--color-text)' }}>{allAttempts.length}</p>
-              <p className="text-[11px] font-medium mt-1" style={{ color: 'var(--color-text-muted)' }}>Total Activity</p>
+              <p className="text-xl sm:text-3xl font-extrabold" style={{ color: 'var(--color-text)' }}>{allAttempts.length}</p>
+              <p className="text-[10px] sm:text-[11px] font-medium mt-1" style={{ color: 'var(--color-text-muted)' }}>Total Activity</p>
               <div className="mt-2">
                 <Sparkline data={trendData.map(d => d.total)} color="var(--color-primary)" />
               </div>
             </div>
 
             {/* Success Rate */}
-            <div className="rounded-2xl border p-5 relative overflow-hidden"
+            <div className="rounded-2xl border p-3 sm:p-5 relative overflow-hidden"
               style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', boxShadow: 'var(--shadow-card)' }}>
               <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full opacity-[0.07]"
                 style={{ background: 'var(--color-success)' }} />
@@ -372,15 +372,15 @@ export default function ActivityPage() {
                 style={{ background: 'var(--color-success-light)' }}>
                 <TrendingUp className="w-4 h-4" style={{ color: 'var(--color-success)' }} />
               </div>
-              <p className="text-3xl font-extrabold" style={{ color: 'var(--color-text)' }}>{successRate}%</p>
-              <p className="text-[11px] font-medium mt-1" style={{ color: 'var(--color-text-muted)' }}>Success Rate</p>
+              <p className="text-xl sm:text-3xl font-extrabold" style={{ color: 'var(--color-text)' }}>{successRate}%</p>
+              <p className="text-[10px] sm:text-[11px] font-medium mt-1" style={{ color: 'var(--color-text-muted)' }}>Success Rate</p>
               <div className="mt-2">
                 <Sparkline data={trendData.map(d => d.success)} color="var(--color-success)" />
               </div>
             </div>
 
             {/* Failed Logins */}
-            <div className="rounded-2xl border p-5 relative overflow-hidden"
+            <div className="rounded-2xl border p-3 sm:p-5 relative overflow-hidden"
               style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', boxShadow: 'var(--shadow-card)' }}>
               <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full opacity-[0.07]"
                 style={{ background: 'var(--color-danger)' }} />
@@ -388,15 +388,15 @@ export default function ActivityPage() {
                 style={{ background: 'var(--color-danger-light)' }}>
                 <TrendingDown className="w-4 h-4" style={{ color: 'var(--color-danger)' }} />
               </div>
-              <p className="text-3xl font-extrabold" style={{ color: 'var(--color-text)' }}>{totalFailed}</p>
-              <p className="text-[11px] font-medium mt-1" style={{ color: 'var(--color-text-muted)' }}>Failed Logins</p>
+              <p className="text-xl sm:text-3xl font-extrabold" style={{ color: 'var(--color-text)' }}>{totalFailed}</p>
+              <p className="text-[10px] sm:text-[11px] font-medium mt-1" style={{ color: 'var(--color-text-muted)' }}>Failed Logins</p>
               <div className="mt-2">
                 <Sparkline data={trendData.map(d => d.failed)} color="var(--color-danger)" />
               </div>
             </div>
 
             {/* Unique IPs */}
-            <div className="rounded-2xl border p-5 relative overflow-hidden"
+            <div className="rounded-2xl border p-3 sm:p-5 relative overflow-hidden"
               style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', boxShadow: 'var(--shadow-card)' }}>
               <div className="absolute -top-4 -right-4 w-24 h-24 rounded-full opacity-[0.07]"
                 style={{ background: 'var(--color-accent)' }} />
@@ -404,8 +404,8 @@ export default function ActivityPage() {
                 style={{ background: 'rgba(139,92,246,0.1)' }}>
                 <Globe className="w-4 h-4" style={{ color: 'var(--color-accent)' }} />
               </div>
-              <p className="text-3xl font-extrabold" style={{ color: 'var(--color-text)' }}>{ipStats.unique}</p>
-              <p className="text-[11px] font-medium mt-1" style={{ color: 'var(--color-text-muted)' }}>Unique IPs</p>
+              <p className="text-xl sm:text-3xl font-extrabold" style={{ color: 'var(--color-text)' }}>{ipStats.unique}</p>
+              <p className="text-[10px] sm:text-[11px] font-medium mt-1" style={{ color: 'var(--color-text-muted)' }}>Unique IPs</p>
               {ipStats.top && (
                 <p className="text-[10px] mt-2 truncate" style={{ color: 'var(--color-text-muted)' }}>
                   Top: {ipStats.top[0]} ({ipStats.top[1]}×)
@@ -417,7 +417,7 @@ export default function ActivityPage() {
           {/* ─── Main Chart ────────────────────────────────── */}
           <div className="rounded-2xl border overflow-hidden"
             style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', boxShadow: 'var(--shadow-card)' }}>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between px-6 pt-6 pb-2 gap-3">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between px-4 sm:px-6 pt-4 sm:pt-6 pb-2 gap-3">
               <div>
                 <h3 className="text-[15px] font-bold" style={{ color: 'var(--color-text)' }}>Activity Overview</h3>
                 <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
@@ -441,7 +441,7 @@ export default function ActivityPage() {
             </div>
 
             {/* Legend */}
-            <div className="flex items-center gap-5 px-6 pb-2">
+            <div className="flex items-center gap-4 sm:gap-5 px-4 sm:px-6 pb-2">
               <div className="flex items-center gap-1.5">
                 <div className="w-2.5 h-2.5 rounded-full" style={{ background: 'var(--color-primary)' }} />
                 <span className="text-[11px] font-medium" style={{ color: 'var(--color-text-muted)' }}>Total</span>
@@ -457,7 +457,7 @@ export default function ActivityPage() {
             </div>
 
             {/* Charts */}
-            <div className="px-6 space-y-1">
+            <div className="px-4 sm:px-6 space-y-1">
               <AreaChart data={trendData} dataKey="total" color="var(--color-primary)" gradientId="grad-total" height={140} />
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="rounded-xl p-3" style={{ background: 'var(--color-bg)' }}>
@@ -476,7 +476,7 @@ export default function ActivityPage() {
             </div>
 
             {/* X-axis labels */}
-            <div className="flex justify-between px-6 pt-1 pb-4">
+            <div className="flex justify-between px-4 sm:px-6 pt-1 pb-3 sm:pb-4">
               {trendData
                 .filter((_, i) => i % Math.ceil(trendData.length / 6) === 0 || i === trendData.length - 1)
                 .map((d, i) => (
@@ -489,11 +489,11 @@ export default function ActivityPage() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
             {/* Peak Hours */}
-            <div className="rounded-2xl border p-6"
+            <div className="rounded-2xl border p-4 sm:p-6"
               style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', boxShadow: 'var(--shadow-card)' }}>
-              <div className="flex items-center justify-between mb-4 flex-wrap gap-2">
+              <div className="flex items-center justify-between mb-3 sm:mb-4 flex-wrap gap-2">
                 <div>
-                  <h3 className="text-[15px] font-bold" style={{ color: 'var(--color-text)' }}>Peak Activity Hours</h3>
+                  <h3 className="text-sm sm:text-[15px] font-bold" style={{ color: 'var(--color-text)' }}>Peak Activity Hours</h3>
                   <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
                     Hourly distribution
                   </p>
@@ -528,9 +528,9 @@ export default function ActivityPage() {
             </div>
 
             {/* Security Insights */}
-            <div className="rounded-2xl border p-6"
+            <div className="rounded-2xl border p-4 sm:p-6"
               style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', boxShadow: 'var(--shadow-card)' }}>
-              <h3 className="text-[15px] font-bold mb-4" style={{ color: 'var(--color-text)' }}>Security Insights</h3>
+              <h3 className="text-sm sm:text-[15px] font-bold mb-3 sm:mb-4" style={{ color: 'var(--color-text)' }}>Security Insights</h3>
 
               <div className="space-y-4">
                 {/* Ratio bar */}
