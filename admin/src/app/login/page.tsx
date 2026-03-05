@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { Shield, Eye, EyeOff, Loader2 } from 'lucide-react';
@@ -12,7 +12,18 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const { login } = useAuth();
+  const { login, user, mustChangePassword, loading: authLoading } = useAuth();
+
+  // If already logged in, redirect appropriately
+  useEffect(() => {
+    if (!authLoading && user) {
+      if (mustChangePassword) {
+        router.replace('/change-password');
+      } else {
+        router.replace('/dashboard');
+      }
+    }
+  }, [authLoading, user, mustChangePassword, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

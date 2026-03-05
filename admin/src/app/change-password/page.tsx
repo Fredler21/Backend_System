@@ -15,7 +15,16 @@ export default function ChangePasswordPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const router = useRouter();
-  const { user, clearMustChangePassword } = useAuth();
+  const { user, loading: authLoading, clearMustChangePassword } = useAuth();
+
+  // Wait for auth to finish loading
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--color-bg)' }}>
+        <Loader2 className="w-8 h-8 animate-spin" style={{ color: 'var(--color-primary)' }} />
+      </div>
+    );
+  }
 
   // Redirect to login if not authenticated
   if (!user) {
