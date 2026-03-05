@@ -100,21 +100,25 @@ export default function DashboardPage() {
   const loadData = async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
     try {
-      const [secRes, usersRes, attemptsRes] = await Promise.all([
+      const [secRes, usersRes] = await Promise.all([
         securityApi.dashboard(),
         usersApi.list({ limit: 1 }),
-        securityApi.loginAttempts({ page: 1, limit: 200 }),
       ]);
 
-      // Group login attempts into 12 hourly buckets (last 12 hours)
-      const now = Date.now();
-      const buckets = new Array(12).fill(0);
-      const attempts = attemptsRes.data ?? [];
-      for (const a of attempts) {
-        const hoursAgo = (now - new Date(a.createdAt).getTime()) / (1000 * 60 * 60);
-        if (hoursAgo >= 0 && hoursAgo < 12) {
-          buckets[11 - Math.floor(hoursAgo)] += 1;
+      // Fetch login attempts separately so a failure doesn't break the dashboard
+      let buckets = new Array(12).fill(0);
+      try {
+        const attemptsRes = await securityApi.loginAttempts({ page: 1, limit: 200 });
+        const now = Date.now();
+        const attempts = attemptsRes.data ?? [];
+        for (const a of attempts) {
+          const hoursAgo = (now - new Date(a.createdAt).getTime()) / (1000 * 60 * 60);
+          if (hoursAgo >= 0 && hoursAgo < 12) {
+            buckets[11 - Math.floor(hoursAgo)] += 1;
+          }
         }
+      } catch (e) {
+        console.warn('Failed to load login attempts for activity chart:', e);
       }
 
       setData({
