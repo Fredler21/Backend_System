@@ -25,12 +25,13 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { securityApi, usersApi } from '@/lib/api';
-import { SecurityDashboard, SecurityEvent } from '@/lib/types';
+import { LoginAttempt, SecurityDashboard, SecurityEvent } from '@/lib/types';
 import { timeAgo } from '@/lib/utils';
 
 interface DashboardData {
   security: SecurityDashboard;
   totalUsers: number;
+  activityPattern: number[];
 }
 
 const severityConfig: Record<string, { color: string; bg: string; label: string }> = {
@@ -99,13 +100,27 @@ export default function DashboardPage() {
   const loadData = async (isRefresh = false) => {
     if (isRefresh) setRefreshing(true);
     try {
-      const [secRes, usersRes] = await Promise.all([
+      const [secRes, usersRes, attemptsRes] = await Promise.all([
         securityApi.dashboard(),
         usersApi.list({ limit: 1 }),
+        securityApi.loginAttempts({ page: 1, limit: 200 }),
       ]);
+
+      // Group login attempts into 12 hourly buckets (last 12 hours)
+      const now = Date.now();
+      const buckets = new Array(12).fill(0);
+      const attempts = attemptsRes.data ?? [];
+      for (const a of attempts) {
+        const hoursAgo = (now - new Date(a.createdAt).getTime()) / (1000 * 60 * 60);
+        if (hoursAgo >= 0 && hoursAgo < 12) {
+          buckets[11 - Math.floor(hoursAgo)] += 1;
+        }
+      }
+
       setData({
         security: secRes.data!,
         totalUsers: usersRes.pagination.total,
+        activityPattern: buckets,
       });
     } catch (err) {
       console.error('Dashboard load error:', err);
@@ -132,7 +147,7 @@ export default function DashboardPage() {
     return <p style={{ color: 'var(--color-text-secondary)' }}>Failed to load dashboard data.</p>;
   }
 
-  const { security, totalUsers } = data;
+  const { security, totalUsers, activityPattern } = data;
   const loginTotal = security.successfulLoginsLast24h + security.failedLoginsLast24h;
   const loginSuccessRate = loginTotal > 0 ? Math.round((security.successfulLoginsLast24h / loginTotal) * 100) : 100;
 
@@ -213,8 +228,7 @@ export default function DashboardPage() {
     { value: Math.max(security.totalEvents - security.criticalEvents - security.unresolvedEvents, 0), color: 'var(--color-success)', label: 'Resolved' },
   ];
 
-  // Mini chart mock data (represents activity pattern)
-  const activityPattern = [2, 5, 3, 8, 4, 6, 9, 7, 3, 5, 8, 4];
+  const totalActivity = activityPattern.reduce((s, v) => s + v, 0);
 
   // Quick actions
   const quickActions = [
@@ -361,7 +375,7 @@ export default function DashboardPage() {
           </div>
           <MiniBarChart data={activityPattern} color="var(--color-primary)" />
           <div className="flex items-center justify-between mt-3">
-            <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Last 12 hours</span>
+            <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{totalActivity} events · Last 12h</span>
             <span className="text-xs font-medium flex items-center gap-1" style={{ color: 'var(--color-primary)' }}>
               View Trends <ChevronRight className="w-3 h-3" />
             </span>
