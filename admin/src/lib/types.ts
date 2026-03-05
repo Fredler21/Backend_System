@@ -45,6 +45,7 @@ export interface User {
   lastName: string;
   role: Role;
   isActive: boolean;
+  mustChangePassword?: boolean;
   createdAt: string;
   updatedAt: string;
 }

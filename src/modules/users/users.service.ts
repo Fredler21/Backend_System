@@ -12,6 +12,7 @@ const userSelect: Prisma.UserSelect = {
   lastName: true,
   role: true,
   isActive: true,
+  mustChangePassword: true,
   createdAt: true,
   updatedAt: true,
 };

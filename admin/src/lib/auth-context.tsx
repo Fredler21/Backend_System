@@ -37,7 +37,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       const res = await authApi.me();
       if (res.success && res.data) {
-        setState({ user: res.data, loading: false, error: null, mustChangePassword: false });
+        setState({ user: res.data, loading: false, error: null, mustChangePassword: res.data.mustChangePassword ?? false });
       } else {
         clearTokens();
         setState({ user: null, loading: false, error: null, mustChangePassword: false });
