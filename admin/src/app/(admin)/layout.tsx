@@ -1,8 +1,9 @@
 'use client';
 
 import { useAuth } from '@/lib/auth-context';
+import { useTheme } from '@/lib/theme-context';
 import { useRouter, usePathname } from 'next/navigation';
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import {
   LayoutDashboard,
   Users,
@@ -10,31 +11,45 @@ import {
   LogOut,
   Shield,
   Loader2,
+  Sun,
+  Moon,
+  Bell,
+  Search,
+  ChevronDown,
+  Activity,
+  Settings,
+  Clock,
 } from 'lucide-react';
 import Link from 'next/link';
 
 const navItems = [
-  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-  { href: '/users', label: 'Users', icon: Users },
-  { href: '/security', label: 'Security', icon: ShieldAlert },
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, color: 'var(--color-primary)' },
+  { href: '/users', label: 'Users', icon: Users, color: 'var(--color-accent)' },
+  { href: '/security', label: 'Security', icon: ShieldAlert, color: 'var(--color-danger)' },
+  { href: '/activity', label: 'Activity', icon: Activity, color: 'var(--color-success)' },
+  { href: '/sessions', label: 'Sessions', icon: Clock, color: 'var(--color-warning)' },
 ];
 
 export default function AuthLayout({ children }: { children: React.ReactNode }) {
   const { user, loading, logout, isAdmin, mustChangePassword } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const router = useRouter();
   const pathname = usePathname();
+  const [profileOpen, setProfileOpen] = useState(false);
+  const [searchFocused, setSearchFocused] = useState(false);
 
   useEffect(() => {
-    if (!loading && !user) {
-      router.replace('/login');
-    }
-    if (!loading && user && !isAdmin) {
-      router.replace('/login');
-    }
-    if (!loading && user && mustChangePassword) {
-      router.replace('/change-password');
-    }
+    if (!loading && !user) router.replace('/login');
+    if (!loading && user && !isAdmin) router.replace('/login');
+    if (!loading && user && mustChangePassword) router.replace('/change-password');
   }, [user, loading, isAdmin, mustChangePassword, router]);
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handler = () => setProfileOpen(false);
+    if (profileOpen) document.addEventListener('click', handler);
+    return () => document.removeEventListener('click', handler);
+  }, [profileOpen]);
 
   if (loading) {
     return (
@@ -53,83 +68,223 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="min-h-screen flex" style={{ background: 'var(--color-bg)' }}>
-      {/* Sidebar */}
+      {/* ─── Sidebar ─────────────────────────────────────── */}
       <aside
-        className="w-64 flex flex-col border-r shrink-0"
-        style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)' }}
+        className="w-[260px] flex flex-col shrink-0 fixed h-screen z-30"
+        style={{ background: 'var(--sidebar-bg)', borderRight: '1px solid var(--sidebar-border)' }}
       >
         {/* Brand */}
-        <div className="h-16 flex items-center gap-3 px-6 border-b" style={{ borderColor: 'var(--color-border)' }}>
-          <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'var(--color-primary)' }}>
-            <Shield className="w-4 h-4 text-white" />
+        <div className="h-16 flex items-center gap-3 px-5">
+          <div
+            className="w-9 h-9 rounded-xl flex items-center justify-center"
+            style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))' }}
+          >
+            <Shield className="w-5 h-5 text-white" />
           </div>
-          <span className="font-bold text-base" style={{ color: 'var(--color-text)' }}>Edlight Admin</span>
+          <div>
+            <span className="font-bold text-[15px]" style={{ color: 'var(--sidebar-text-active)' }}>
+              Edlight
+            </span>
+            <span className="text-[10px] font-medium ml-1.5 px-1.5 py-0.5 rounded"
+              style={{ background: 'var(--color-primary-light)', color: 'var(--color-primary)' }}>
+              ADMIN
+            </span>
+          </div>
+        </div>
+
+        {/* Search */}
+        <div className="px-4 mb-2">
+          <div className="relative">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2"
+              style={{ color: 'var(--sidebar-text)' }} />
+            <input
+              type="text"
+              placeholder="Search..."
+              className="w-full pl-9 pr-3 py-2 rounded-lg text-sm border-0"
+              style={{
+                background: 'var(--sidebar-hover)',
+                color: 'var(--sidebar-text-active)',
+              }}
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setSearchFocused(false)}
+            />
+          </div>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 py-4 px-3 space-y-1">
+        <div className="px-3 mt-2 mb-1">
+          <span className="text-[10px] font-semibold uppercase tracking-widest px-3"
+            style={{ color: 'var(--sidebar-text)', opacity: 0.5 }}>
+            Menu
+          </span>
+        </div>
+        <nav className="flex-1 px-3 space-y-0.5 overflow-y-auto">
           {navItems.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + '/');
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-colors"
+                className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all"
                 style={{
-                  background: isActive ? 'rgba(99,102,241,0.1)' : 'transparent',
-                  color: isActive ? 'var(--color-primary)' : 'var(--color-text-secondary)',
+                  background: isActive ? 'var(--sidebar-active-bg)' : 'transparent',
+                  color: isActive ? 'var(--sidebar-text-active)' : 'var(--sidebar-text)',
                 }}
               >
-                <item.icon className="w-5 h-5" />
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center"
+                  style={{
+                    background: isActive ? item.color : 'transparent',
+                    opacity: isActive ? 1 : 0.7,
+                  }}
+                >
+                  <item.icon className="w-4 h-4" style={{ color: isActive ? '#fff' : 'var(--sidebar-text)' }} />
+                </div>
                 {item.label}
+                {isActive && (
+                  <div className="ml-auto w-1.5 h-1.5 rounded-full" style={{ background: item.color }} />
+                )}
               </Link>
             );
           })}
         </nav>
 
-        {/* User Info & Logout */}
-        <div className="border-t p-4" style={{ borderColor: 'var(--color-border)' }}>
-          <div className="flex items-center gap-3 mb-3">
+        {/* Sidebar Footer */}
+        <div className="p-4" style={{ borderTop: '1px solid var(--sidebar-border)' }}>
+          <div className="flex items-center gap-3">
             <div
-              className="w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold text-white"
-              style={{ background: 'var(--color-primary)' }}
+              className="w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold text-white shrink-0"
+              style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))' }}
             >
               {user.firstName[0]}{user.lastName[0]}
             </div>
-            <div className="min-w-0">
-              <p className="text-sm font-medium truncate" style={{ color: 'var(--color-text)' }}>
+            <div className="min-w-0 flex-1">
+              <p className="text-sm font-medium truncate" style={{ color: 'var(--sidebar-text-active)' }}>
                 {user.firstName} {user.lastName}
               </p>
-              <p className="text-xs truncate" style={{ color: 'var(--color-text-muted)' }}>
-                {user.email}
+              <p className="text-[11px] truncate" style={{ color: 'var(--sidebar-text)' }}>
+                {user.role}
               </p>
             </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-2 text-sm w-full px-3 py-2 rounded-lg transition-colors"
-            style={{ color: 'var(--color-text-muted)' }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = 'var(--color-surface-hover)';
-              e.currentTarget.style.color = 'var(--color-danger)';
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = 'transparent';
-              e.currentTarget.style.color = 'var(--color-text-muted)';
-            }}
-          >
-            <LogOut className="w-4 h-4" />
-            Sign out
-          </button>
         </div>
       </aside>
 
-      {/* Main content */}
-      <main className="flex-1 overflow-y-auto">
-        <div className="max-w-7xl mx-auto px-8 py-8">
-          {children}
-        </div>
-      </main>
+      {/* ─── Main Area ───────────────────────────────────── */}
+      <div className="flex-1 ml-[260px] flex flex-col min-h-screen">
+        {/* Top Bar */}
+        <header
+          className="h-16 flex items-center justify-between px-8 shrink-0 sticky top-0 z-20"
+          style={{
+            background: 'var(--color-surface)',
+            borderBottom: '1px solid var(--color-border)',
+            backdropFilter: 'blur(8px)',
+          }}
+        >
+          <div>
+            <h2 className="text-lg font-semibold capitalize" style={{ color: 'var(--color-text)' }}>
+              {pathname.split('/').pop() || 'Dashboard'}
+            </h2>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Theme Toggle */}
+            <button
+              onClick={toggleTheme}
+              className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors"
+              style={{ color: 'var(--color-text-muted)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-surface-hover)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+              title={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+            >
+              {theme === 'dark' ? <Sun className="w-[18px] h-[18px]" /> : <Moon className="w-[18px] h-[18px]" />}
+            </button>
+
+            {/* Notifications */}
+            <button
+              className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors relative"
+              style={{ color: 'var(--color-text-muted)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-surface-hover)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+            >
+              <Bell className="w-[18px] h-[18px]" />
+              <span
+                className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full"
+                style={{ background: 'var(--color-danger)' }}
+              />
+            </button>
+
+            {/* Divider */}
+            <div className="w-px h-8 mx-2" style={{ background: 'var(--color-border)' }} />
+
+            {/* Profile Dropdown */}
+            <div className="relative">
+              <button
+                onClick={(e) => { e.stopPropagation(); setProfileOpen(!profileOpen); }}
+                className="flex items-center gap-2 px-2 py-1.5 rounded-lg transition-colors"
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-surface-hover)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+              >
+                <div
+                  className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold text-white"
+                  style={{ background: 'linear-gradient(135deg, var(--color-primary), var(--color-secondary))' }}
+                >
+                  {user.firstName[0]}{user.lastName[0]}
+                </div>
+                <span className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
+                  {user.firstName}
+                </span>
+                <ChevronDown className="w-4 h-4" style={{ color: 'var(--color-text-muted)' }} />
+              </button>
+
+              {profileOpen && (
+                <div
+                  className="absolute right-0 top-full mt-2 w-56 rounded-xl border py-2 z-50"
+                  style={{
+                    background: 'var(--color-surface)',
+                    borderColor: 'var(--color-border)',
+                    boxShadow: 'var(--shadow-lg)',
+                  }}
+                >
+                  <div className="px-4 py-2 border-b" style={{ borderColor: 'var(--color-border)' }}>
+                    <p className="text-sm font-medium" style={{ color: 'var(--color-text)' }}>
+                      {user.firstName} {user.lastName}
+                    </p>
+                    <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>{user.email}</p>
+                  </div>
+                  <div className="py-1">
+                    <button
+                      onClick={() => router.push('/change-password')}
+                      className="w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition-colors"
+                      style={{ color: 'var(--color-text-secondary)' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-surface-hover)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                    >
+                      <Settings className="w-4 h-4" /> Change Password
+                    </button>
+                    <button
+                      onClick={handleLogout}
+                      className="w-full text-left px-4 py-2 text-sm flex items-center gap-2 transition-colors"
+                      style={{ color: 'var(--color-danger)' }}
+                      onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-danger-light)'; }}
+                      onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                    >
+                      <LogOut className="w-4 h-4" /> Sign Out
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </header>
+
+        {/* Main content */}
+        <main className="flex-1 overflow-y-auto p-8">
+          <div className="max-w-[1400px] mx-auto">
+            {children}
+          </div>
+        </main>
+      </div>
     </div>
   );
 }
