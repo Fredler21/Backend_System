@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import { Shield, Eye, EyeOff, Loader2 } from 'lucide-react';
@@ -11,9 +11,8 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const [loginSuccess, setLoginSuccess] = useState(false);
   const router = useRouter();
-  const { login, mustChangePassword, user } = useAuth();
+  const { login } = useAuth();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -21,25 +20,18 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      await login(email, password);
-      setLoginSuccess(true);
+      const result = await login(email, password);
+      if (result.mustChangePassword) {
+        router.push('/change-password');
+      } else {
+        router.push('/dashboard');
+      }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Authentication failed');
     } finally {
       setLoading(false);
     }
   };
-
-  // Redirect after successful login
-  useEffect(() => {
-    if (loginSuccess && user) {
-      if (mustChangePassword) {
-        router.push('/change-password');
-      } else {
-        router.push('/dashboard');
-      }
-    }
-  }, [loginSuccess, user, mustChangePassword, router]);
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'var(--color-bg)' }}>

@@ -12,7 +12,7 @@ interface AuthState {
 }
 
 interface AuthContextValue extends AuthState {
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<{ mustChangePassword: boolean }>;
   logout: () => Promise<void>;
   clearMustChangePassword: () => void;
   isAdmin: boolean;
@@ -52,7 +52,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     fetchUser();
   }, [fetchUser]);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<{ mustChangePassword: boolean }> => {
     setState((s) => ({ ...s, loading: true, error: null }));
     try {
       const res = await authApi.login({ email, password });
@@ -62,8 +62,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           throw new Error('Access denied. Admin privileges required.');
         }
         setTokens(tokens.accessToken, tokens.refreshToken);
-        setState({ user, loading: false, error: null, mustChangePassword: mustChangePassword ?? false });
+        const needsChange = mustChangePassword ?? false;
+        setState({ user, loading: false, error: null, mustChangePassword: needsChange });
+        return { mustChangePassword: needsChange };
       }
+      return { mustChangePassword: false };
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Login failed';
       setState({ user: null, loading: false, error: message, mustChangePassword: false });
