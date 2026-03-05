@@ -10,10 +10,10 @@ async function main() {
   const hashedPassword = await bcrypt.hash('admin@edlight2026', 12);
 
   const admin = await prisma.user.upsert({
-    where: { email: 'admin@edlight.io' },
+    where: { email: 'admin@edlight.org' },
     update: {},
     create: {
-      email: 'admin@edlight.io',
+      email: 'admin@edlight.org',
       password: hashedPassword,
       firstName: 'Edlight',
       lastName: 'Admin',
@@ -23,39 +23,22 @@ async function main() {
 
   console.log(`✅ Admin user created: ${admin.email}`);
 
-  // Create sample student
-  const studentPassword = await bcrypt.hash('student@edlight2026', 12);
+  // Create info admin user
+  const infoPassword = await bcrypt.hash('info@edlight2026', 12);
 
-  const student = await prisma.user.upsert({
-    where: { email: 'student@edlight.io' },
+  const infoAdmin = await prisma.user.upsert({
+    where: { email: 'info@edlight.org' },
     update: {},
     create: {
-      email: 'student@edlight.io',
-      password: studentPassword,
-      firstName: 'Sample',
-      lastName: 'Student',
-      role: Role.STUDENT,
+      email: 'info@edlight.org',
+      password: infoPassword,
+      firstName: 'Edlight',
+      lastName: 'Info',
+      role: Role.ADMIN,
     },
   });
 
-  console.log(`✅ Student user created: ${student.email}`);
-
-  // Create sample developer
-  const devPassword = await bcrypt.hash('developer@edlight2026', 12);
-
-  const developer = await prisma.user.upsert({
-    where: { email: 'developer@edlight.io' },
-    update: {},
-    create: {
-      email: 'developer@edlight.io',
-      password: devPassword,
-      firstName: 'Sample',
-      lastName: 'Developer',
-      role: Role.DEVELOPER,
-    },
-  });
-
-  console.log(`✅ Developer user created: ${developer.email}`);
+  console.log(`✅ Admin user created: ${infoAdmin.email}`);
 
   console.log('🌱 Seeding complete.');
 }
