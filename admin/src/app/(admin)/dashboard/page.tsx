@@ -291,7 +291,9 @@ export default function DashboardPage() {
       {/* ─── Charts Row ──────────────────────────────────── */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
         {/* Login Success Rate */}
-        <div className="rounded-xl border p-6 animate-fade-in stagger-7"
+        <button
+          onClick={() => router.push('/activity')}
+          className="rounded-xl border p-6 animate-fade-in stagger-7 text-left transition-all card-interactive"
           style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', boxShadow: 'var(--shadow-card)' }}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Login Success Rate</h3>
@@ -322,10 +324,12 @@ export default function DashboardPage() {
               </div>
             </div>
           </div>
-        </div>
+        </button>
 
         {/* Event Severity Breakdown */}
-        <div className="rounded-xl border p-6 animate-fade-in stagger-7"
+        <button
+          onClick={() => router.push('/security')}
+          className="rounded-xl border p-6 animate-fade-in stagger-7 text-left transition-all card-interactive"
           style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', boxShadow: 'var(--shadow-card)' }}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Event Severity</h3>
@@ -344,10 +348,12 @@ export default function DashboardPage() {
               ))}
             </div>
           </div>
-        </div>
+        </button>
 
         {/* Activity Pattern */}
-        <div className="rounded-xl border p-6 animate-fade-in stagger-8"
+        <button
+          onClick={() => router.push('/activity')}
+          className="rounded-xl border p-6 animate-fade-in stagger-8 text-left transition-all card-interactive"
           style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', boxShadow: 'var(--shadow-card)' }}>
           <div className="flex items-center justify-between mb-4">
             <h3 className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Activity Trend</h3>
@@ -356,11 +362,11 @@ export default function DashboardPage() {
           <MiniBarChart data={activityPattern} color="var(--color-primary)" />
           <div className="flex items-center justify-between mt-3">
             <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>Last 12 hours</span>
-            <span className="text-xs font-medium" style={{ color: 'var(--color-primary)' }}>
-              {security.totalEvents} total events
+            <span className="text-xs font-medium flex items-center gap-1" style={{ color: 'var(--color-primary)' }}>
+              View Trends <ChevronRight className="w-3 h-3" />
             </span>
           </div>
-        </div>
+        </button>
       </div>
 
       {/* ─── Quick Actions + Security Alerts ─────────────── */}
