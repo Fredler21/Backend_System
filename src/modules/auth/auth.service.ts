@@ -20,6 +20,9 @@ import {
   logSecurityEvent,
 } from '../security/security.service';
 
+// Only these emails are allowed to log into the admin panel
+const ADMIN_ALLOWED_EMAILS = ['admin@edlight.org', 'info@edlight.org'];
+
 /**
  * Strip sensitive fields from user object.
  */
@@ -105,33 +108,10 @@ function parseExpiry(expiry: string): number {
 
 /**
  * Register a new user account.
+ * Registration is currently disabled — all accounts are provisioned by admins.
  */
-export async function register(input: RegisterInput): Promise<LoginResponse> {
-  const existingUser = await prisma.user.findUnique({
-    where: { email: input.email },
-  });
-
-  if (existingUser) {
-    throw new ConflictError('An account with this email already exists');
-  }
-
-  const hashedPassword = await bcrypt.hash(input.password, env.BCRYPT_SALT_ROUNDS);
-
-  const user = await prisma.user.create({
-    data: {
-      email: input.email,
-      password: hashedPassword,
-      firstName: input.firstName,
-      lastName: input.lastName,
-    },
-  });
-
-  const tokens = await generateTokens(user);
-
-  return {
-    user: toUserResponse(user),
-    tokens,
-  };
+export async function register(_input: RegisterInput): Promise<LoginResponse> {
+  throw new UnauthorizedError('Public registration is disabled. Contact an administrator.');
 }
 
 /**
@@ -159,6 +139,19 @@ export async function login(input: LoginInput, ipAddress: string, userAgent?: st
       failureReason: 'User not found',
     });
     throw new UnauthorizedError('Invalid email or password');
+  }
+
+  // Only whitelisted emails can log in
+  if (!ADMIN_ALLOWED_EMAILS.includes(user.email.toLowerCase())) {
+    await recordLoginAttempt({
+      email: input.email,
+      ipAddress,
+      userAgent,
+      success: false,
+      failureReason: 'Email not authorized',
+      userId: user.id,
+    });
+    throw new UnauthorizedError('Access denied. This account is not authorized.');
   }
 
   // Check if account is locked
