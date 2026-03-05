@@ -23,6 +23,8 @@ import {
   X,
 } from 'lucide-react';
 import Link from 'next/link';
+import { securityApi } from '@/lib/api';
+import type { SecurityEvent } from '@/lib/types';
 
 const navItems = [
   { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, color: 'var(--color-primary)' },
@@ -40,6 +42,9 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   const [profileOpen, setProfileOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const [notifications, setNotifications] = useState<SecurityEvent[]>([]);
+  const [notifLoading, setNotifLoading] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) router.replace('/login');
@@ -47,12 +52,26 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
     if (!loading && user && mustChangePassword) router.replace('/change-password');
   }, [user, loading, isAdmin, mustChangePassword, router]);
 
-  // Close dropdown on click outside
+  // Fetch notifications on mount & every 60s
   useEffect(() => {
-    const handler = () => setProfileOpen(false);
-    if (profileOpen) document.addEventListener('click', handler);
+    if (!user) return;
+    const fetchNotifs = async () => {
+      try {
+        const res = await securityApi.events({ limit: 10, resolved: 'false' });
+        if (res.success && res.data) setNotifications(res.data);
+      } catch { /* ignore */ }
+    };
+    fetchNotifs();
+    const interval = setInterval(fetchNotifs, 60000);
+    return () => clearInterval(interval);
+  }, [user]);
+
+  // Close dropdowns on click outside
+  useEffect(() => {
+    const handler = () => { setProfileOpen(false); setNotifOpen(false); };
+    if (profileOpen || notifOpen) document.addEventListener('click', handler);
     return () => document.removeEventListener('click', handler);
-  }, [profileOpen]);
+  }, [profileOpen, notifOpen]);
 
   if (loading) {
     return (
@@ -237,18 +256,100 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             </button>
 
             {/* Notifications */}
-            <button
-              className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors relative"
-              style={{ color: 'var(--color-text-muted)' }}
-              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-surface-hover)'; }}
-              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
-            >
-              <Bell className="w-[18px] h-[18px]" />
-              <span
-                className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full"
-                style={{ background: 'var(--color-danger)' }}
-              />
-            </button>
+            <div className="relative">
+              <button
+                onClick={(e) => { e.stopPropagation(); setNotifOpen(!notifOpen); setProfileOpen(false); }}
+                className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors relative"
+                style={{ color: 'var(--color-text-muted)' }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-surface-hover)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+              >
+                <Bell className="w-[18px] h-[18px]" />
+                {notifications.length > 0 && (
+                  <span
+                    className="absolute top-1 right-1 min-w-[16px] h-4 flex items-center justify-center rounded-full text-[10px] font-bold text-white px-1"
+                    style={{ background: 'var(--color-danger)' }}
+                  >
+                    {notifications.length > 9 ? '9+' : notifications.length}
+                  </span>
+                )}
+              </button>
+
+              {notifOpen && (
+                <div
+                  className="absolute right-0 top-full mt-2 w-80 rounded-xl border py-0 z-50 overflow-hidden"
+                  style={{ background: 'var(--color-surface)', borderColor: 'var(--color-border)', boxShadow: 'var(--shadow-lg)' }}
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <div className="px-4 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid var(--color-border)' }}>
+                    <span className="text-sm font-semibold" style={{ color: 'var(--color-text)' }}>Notifications</span>
+                    {notifications.length > 0 && (
+                      <span className="text-[11px] font-medium px-2 py-0.5 rounded-full"
+                        style={{ background: 'var(--color-danger-light)', color: 'var(--color-danger)' }}>
+                        {notifications.length} unresolved
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="max-h-80 overflow-y-auto">
+                    {notifications.length === 0 ? (
+                      <div className="py-10 text-center">
+                        <Bell className="w-8 h-8 mx-auto mb-2" style={{ color: 'var(--color-text-muted)', opacity: 0.4 }} />
+                        <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>No notifications</p>
+                      </div>
+                    ) : (
+                      notifications.map((evt) => {
+                        const severityColor = evt.severity === 'CRITICAL' ? 'var(--color-danger)'
+                          : evt.severity === 'HIGH' ? 'var(--color-warning)'
+                          : evt.severity === 'MEDIUM' ? 'var(--color-accent)'
+                          : 'var(--color-text-muted)';
+                        return (
+                          <div
+                            key={evt.id}
+                            className="px-4 py-3 transition-colors cursor-pointer"
+                            style={{ borderBottom: '1px solid var(--color-border)' }}
+                            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-surface-hover)'; }}
+                            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+                            onClick={() => { setNotifOpen(false); router.push('/security'); }}
+                          >
+                            <div className="flex items-start gap-3">
+                              <div className="w-2 h-2 rounded-full mt-1.5 shrink-0" style={{ background: severityColor }} />
+                              <div className="min-w-0 flex-1">
+                                <p className="text-[13px] font-medium truncate" style={{ color: 'var(--color-text)' }}>
+                                  {evt.type.replace(/_/g, ' ')}
+                                </p>
+                                <p className="text-[12px] mt-0.5 line-clamp-2" style={{ color: 'var(--color-text-muted)' }}>
+                                  {evt.message}
+                                </p>
+                                <p className="text-[11px] mt-1" style={{ color: 'var(--color-text-muted)', opacity: 0.6 }}>
+                                  {new Date(evt.createdAt).toLocaleString()}
+                                </p>
+                              </div>
+                              <span className="text-[10px] font-semibold shrink-0 px-1.5 py-0.5 rounded"
+                                style={{ background: `color-mix(in srgb, ${severityColor} 15%, transparent)`, color: severityColor }}>
+                                {evt.severity}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+
+                  {notifications.length > 0 && (
+                    <div className="px-4 py-2.5 text-center" style={{ borderTop: '1px solid var(--color-border)' }}>
+                      <button
+                        onClick={() => { setNotifOpen(false); router.push('/security'); }}
+                        className="text-[13px] font-medium transition-colors"
+                        style={{ color: 'var(--color-primary)' }}
+                      >
+                        View all in Security
+                      </button>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
 
             {/* Divider */}
             <div className="w-px h-8 mx-2" style={{ background: 'var(--color-border)' }} />
