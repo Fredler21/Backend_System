@@ -19,6 +19,8 @@ import {
   Activity,
   Settings,
   Clock,
+  Menu,
+  X,
 } from 'lucide-react';
 import Link from 'next/link';
 
@@ -37,6 +39,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
   const pathname = usePathname();
   const [profileOpen, setProfileOpen] = useState(false);
   const [searchFocused, setSearchFocused] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   useEffect(() => {
     if (!loading && !user) router.replace('/login');
@@ -68,10 +71,22 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
   return (
     <div className="min-h-screen flex" style={{ background: 'var(--color-bg)' }}>
+      {/* ─── Sidebar Overlay ─────────────────────────────── */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-sm transition-opacity"
+          onClick={() => setSidebarOpen(false)}
+        />
+      )}
+
       {/* ─── Sidebar ─────────────────────────────────────── */}
       <aside
-        className="w-[260px] flex flex-col shrink-0 fixed h-screen z-30"
-        style={{ background: 'var(--sidebar-bg)', borderRight: '1px solid var(--sidebar-border)' }}
+        className="w-[260px] flex flex-col shrink-0 fixed h-screen z-50 transition-transform duration-300 ease-in-out"
+        style={{
+          background: 'var(--sidebar-bg)',
+          borderRight: '1px solid var(--sidebar-border)',
+          transform: sidebarOpen ? 'translateX(0)' : 'translateX(-100%)',
+        }}
       >
         {/* Brand */}
         <div className="h-16 flex items-center gap-3 px-5">
@@ -90,6 +105,16 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               ADMIN
             </span>
           </div>
+          {/* Close button */}
+          <button
+            onClick={() => setSidebarOpen(false)}
+            className="ml-auto w-8 h-8 rounded-lg flex items-center justify-center transition-colors"
+            style={{ color: 'var(--sidebar-text)' }}
+            onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--sidebar-hover)'; }}
+            onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+          >
+            <X className="w-4 h-4" />
+          </button>
         </div>
 
         {/* Search */}
@@ -125,6 +150,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={() => setSidebarOpen(false)}
                 className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all"
                 style={{
                   background: isActive ? 'var(--sidebar-active-bg)' : 'transparent',
@@ -171,7 +197,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
       </aside>
 
       {/* ─── Main Area ───────────────────────────────────── */}
-      <div className="flex-1 ml-[260px] flex flex-col min-h-screen">
+      <div className="flex-1 flex flex-col min-h-screen">
         {/* Top Bar */}
         <header
           className="h-16 flex items-center justify-between px-8 shrink-0 sticky top-0 z-20"
@@ -181,7 +207,17 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
             backdropFilter: 'blur(8px)',
           }}
         >
-          <div>
+          <div className="flex items-center gap-3">
+            {/* Hamburger */}
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="w-9 h-9 rounded-lg flex items-center justify-center transition-colors"
+              style={{ color: 'var(--color-text-muted)' }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'var(--color-surface-hover)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'transparent'; }}
+            >
+              <Menu className="w-5 h-5" />
+            </button>
             <h2 className="text-lg font-semibold capitalize" style={{ color: 'var(--color-text)' }}>
               {pathname.split('/').pop() || 'Dashboard'}
             </h2>
